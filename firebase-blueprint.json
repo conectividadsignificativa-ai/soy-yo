@@ -1,0 +1,42 @@
+{
+  "entities": {
+    "BeneficiarySubmission": {
+      "title": "Beneficiary Submission",
+      "description": "Information collected from potential beneficiaries of the Conectividad Significativa project.",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string", "description": "Full name of the beneficiary" },
+        "birthDate": { "type": "string", "description": "Birth date of the beneficiary" },
+        "email": { "type": "string", "format": "email" },
+        "whatsapp": { "type": "string" },
+        "department": { "type": "string" },
+        "municipality": { "type": "string" },
+        "zone": { "type": "string", "enum": ["Rural", "Urbana"] },
+        "genderIdentity": { "type": "string" },
+        "communities": { "type": "array", "items": { "type": "string" } },
+        "disabilityInfo": { "type": "object" },
+        "ageRange": { "type": "string" },
+        "internetUsage": { "type": "object" },
+        "motivations": { "type": "object" },
+        "digitalSkills": { "type": "object" },
+        "connectivity": { "type": "object" },
+        "digitalRisks": { "type": "object" },
+        "educationLevel": { "type": "string" },
+        "currentSituation": { "type": "string" },
+        "interests": { "type": "array", "items": { "type": "string" } },
+        "employabilityDetails": { "type": "object" },
+        "entrepreneurshipDetails": { "type": "object" },
+        "publicPolicyDetails": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string", "description": "UID of the user if authenticated" }
+      },
+      "required": ["fullName", "email", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/submissions/{submissionId}": {
+      "schema": "BeneficiarySubmission",
+      "description": "Collection of chatbot submissions."
+    }
+  }
+}
