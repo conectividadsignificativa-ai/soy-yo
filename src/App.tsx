@@ -118,15 +118,19 @@ export default function App() {
         <header className="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex flex-col shadow-lg">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
-                <Sparkles className="w-6 h-6 text-yellow-300" />
+              <div className="bg-white p-1.5 rounded-xl shadow-inner">
+                <img 
+                  src="https://raw.githubusercontent.com/google-gemini/ai-studio-build-assets/main/app-icons/conectividad_significativa_icon.png" 
+                  alt="Logo"
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <div>
                 <h1 className="font-bold text-lg leading-tight">Conectividad Significativa</h1>
                 <p className="text-blue-100 text-xs">Transformando territorios</p>
               </div>
             </div>
-            <Bot className="w-6 h-6 text-blue-200" />
+            <Bot className="w-5 h-5 text-blue-200" />
           </div>
           <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
             <motion.div 
@@ -139,7 +143,7 @@ export default function App() {
 
 
         {/* Message Area */}
-        <main className="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth">
+        <main className="flex-1 overflow-y-auto p-6 space-y-5 scroll-smooth">
           {messages.map((msg) => (
             <motion.div
               key={msg.id}
@@ -151,11 +155,20 @@ export default function App() {
               )}
             >
               <div className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1",
-                msg.sender === 'bot' ? "bg-indigo-100 text-indigo-600" : "bg-blue-600 text-white"
+                "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-1 shadow-sm overflow-hidden",
+                msg.sender === 'bot' ? "bg-white border border-slate-100" : "bg-blue-600 text-white"
               )}>
-                {msg.sender === 'bot' ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
+                {msg.sender === 'bot' ? (
+                  <img 
+                    src="https://raw.githubusercontent.com/google-gemini/ai-studio-build-assets/main/app-icons/conectividad_significativa_icon.png" 
+                    alt="Bot"
+                    className="w-7 h-7 object-contain"
+                  />
+                ) : (
+                  <User className="w-5 h-5" />
+                )}
               </div>
+
               <div className={cn(
                 "px-4 py-3 rounded-2xl text-sm leading-relaxed",
                 msg.sender === 'bot' 
@@ -170,8 +183,12 @@ export default function App() {
           ))}
           {isTyping && (
             <div className="flex gap-3 mr-auto max-w-[85%]">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                <Bot className="w-5 h-5 animate-pulse" />
+              <div className="w-9 h-9 rounded-full bg-white border border-slate-100 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+                <img 
+                  src="https://raw.githubusercontent.com/google-gemini/ai-studio-build-assets/main/app-icons/conectividad_significativa_icon.png" 
+                  alt="Typing"
+                  className="w-7 h-7 object-contain animate-pulse"
+                />
               </div>
               <div className="bg-slate-100 px-4 py-3 rounded-2xl rounded-tl-none border border-slate-200 flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
