@@ -40,7 +40,15 @@ export default function App() {
   useEffect(() => {
     const welcome = async () => {
       setIsTyping(true);
-      await signInAnonymously(auth);
+      
+      // Try to sign in anonymously if needed, but don't block the welcome message
+      try {
+        if (!auth.currentUser) {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.warn("Auth hint: Anonymous auth might be disabled in Firebase console.", err);
+      }
       
       const welcomeMsg = "¡Hola! Qué bacano que estés por aquí. Soy el asistente de **Conectividad Significativa**. Estamos buscando jóvenes del Caribe y el Pacífico que quieran transformar sus territorios con tecnología. ¿Te animas a contarnos sobre ti? ¡Prometo que es rápido!";
       
@@ -72,7 +80,7 @@ export default function App() {
       await setDoc(doc(db, 'submissions', submissionId), {
         ...answers,
         createdAt: serverTimestamp(),
-        userId: auth.currentUser?.uid
+        userId: auth.currentUser?.uid || 'anonymous'
       });
       
       const finalMsg = "¡Excelente, parce! Ya tenemos toda tu información. Tus datos están guardados de forma segura. Pronto nos pondremos en contacto contigo para seguir construyendo esta red de transformación digital. ¡Estamos en la jugada! 🚀";
@@ -200,7 +208,7 @@ export default function App() {
 
         {/* Action Area */}
         <footer className="p-4 bg-white border-t border-slate-100">
-          {!isComplete && currentQuestionIndex < QUESTIONS.length && (
+          {!isComplete && currentQuestionIndex >= 0 && currentQuestionIndex < QUESTIONS.length && (
             <div className="space-y-3">
               <QuestionInput 
                 question={QUESTIONS[currentQuestionIndex]}

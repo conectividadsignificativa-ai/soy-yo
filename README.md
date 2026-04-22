@@ -8,32 +8,26 @@ Este es un chatbot conversacional diseñado para identificar y focalizar benefic
 - **Base de Datos**: Integrado con Firebase Firestore para almacenamiento seguro de respuestas.
 - **Responsive**: Funciona perfectamente en dispositivos móviles y escritorio.
 
-## Cómo desplegar en tu propio sitio web
+## Despliegue en GitHub Pages (Automático)
 
-### 1. Exportar a GitHub
-Utiliza la función de exportación en AI Studio para llevar este código a tu cuenta de GitHub.
+Este proyecto está configurado para desplegarse automáticamente usando **GitHub Actions**. No necesitas instalar nada en tu computador.
 
-### 2. Hosting (Vercel / Netlify)
-La forma más fácil de ponerlo en vivo es:
-1. Ve a [Vercel](https://vercel.com) o [Netlify](https://netlify.com).
-2. Conecta tu repositorio de GitHub recién creado.
-3. Configura las variables de entorno:
-   - `GEMINI_API_KEY`: Tu llave de API de Google AI.
-4. ¡Listo! Tendrás una URL pública.
+### Pasos para activar la web:
+1. **Exportar**: Usa el menú *Settings > Export to GitHub* en AI Studio.
+2. **Configurar GitHub Pages**:
+   - En tu repo de GitHub, ve a **Settings > Pages**.
+   - En *Build and deployment > Source*, selecciona **GitHub Actions**.
+3. **Agregar API Key**:
+   - Ve a **Settings > Secrets and variables > Actions**.
+   - Crea un **New repository secret** llamado `GEMINI_API_KEY` con tu llave de Google AI.
+4. **Ver tu sitio**: 
+   - Ve a la pestaña **Actions** en tu repo. Verás un proceso llamado "Deploy to GitHub Pages".
+   - Cuando termine (se ponga en verde), tu sitio estará vivo en `https://tu-usuario.github.io/tu-repo/`.
 
-### 3. Embeber en un sitio existente
-Para que el chatbot aparezca dentro de otra página web, inserta este código HTML:
-
-```html
-<iframe 
-  src="TU_URL_DE_DESPLIEGUE" 
-  width="100%" 
-  height="600px" 
-  style="border:none; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);"
-></iframe>
-```
-
-## Requisitos de Desarrollo
-- Node.js 18+
-- Una cuenta de Firebase (configurada en `firebase-applet-config.json`)
-- API Key de Gemini
+## Software Libre
+Este proyecto utiliza tecnologías 100% de código abierto:
+- **React 19**
+- **Vite**
+- **Tailwind CSS**
+- **Lucide Icons**
+- **Motion**
