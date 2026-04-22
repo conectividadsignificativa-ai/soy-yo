@@ -112,8 +112,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans text-gray-900">
-      <div id="chat-container" className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[85vh] border border-slate-100">
+    <div className="min-h-screen bg-white sm:bg-slate-50 flex flex-col items-center justify-center sm:p-4 font-sans text-gray-900">
+      <div id="chat-container" className="w-full h-full sm:h-[85vh] sm:max-w-2xl bg-white sm:rounded-3xl sm:shadow-2xl overflow-hidden flex flex-col border-none sm:border sm:border-slate-100">
         
         {/* Header */}
         <header className="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex flex-col shadow-lg">
@@ -244,7 +244,7 @@ interface QuestionInputProps {
 function QuestionInput({ question, value, onChange, onSend, disabled }: QuestionInputProps) {
   if (question.type === 'select' || question.type === 'multi-select') {
     return (
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-2 max-h-[40vh] overflow-y-auto pr-1 custom-scrollbar">
         {question.options?.map((opt) => (
           <button
             key={opt}
