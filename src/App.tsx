@@ -5,7 +5,6 @@ import { db, auth } from './lib/firebase';
 import { signInAnonymously } from 'firebase/auth';
 import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { QUESTIONS, Question } from './constants/questions';
-import { getColombianVibrantResponse } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -94,6 +93,8 @@ export default function App() {
   };
 
   const handleSend = async (val?: string) => {
+    if (isTyping) return; // Prevent spamming while bot is thinking
+    
     const text = val || inputValue;
     if (!text.trim()) return;
 
@@ -106,20 +107,8 @@ export default function App() {
     // Save answer
     setAnswers(prev => ({ ...prev, [currentQuestion.id]: text }));
     
-    setIsTyping(true);
-    
-    // Move to next question IMMEDIATELY for speed
+    // Move to next question immediately
     setCurrentQuestionIndex(prev => prev + 1);
-
-    // Get Gemini vibe in background (don't block the next question)
-    getColombianVibrantResponse(text, `Pregunta respondida: ${currentQuestion.text}. Sección: ${currentQuestion.section}`)
-      .then(vibeResponse => {
-        setMessages(prev => [...prev, { id: Date.now().toString(), text: vibeResponse, sender: 'bot', timestamp: new Date() }]);
-        setIsTyping(false);
-      })
-      .catch(() => {
-        setIsTyping(false);
-      });
   };
 
   return (
@@ -222,7 +211,7 @@ export default function App() {
                 value={inputValue}
                 onChange={setInputValue}
                 onSend={handleSend}
-                disabled={isTyping}
+                disabled={isTyping} 
               />
             </div>
           )}
