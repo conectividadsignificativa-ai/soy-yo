@@ -13,7 +13,7 @@ export async function getColombianVibrantResponse(message: string, context: stri
         Contexto actual: ${context}
         Mensaje del usuario: ${message}
         
-        Responde de forma corta, animada y motiva al usuario a seguir. Si el usuario dio una respuesta válida, agradécele y prepáralo para la siguiente pregunta. No repitas la pregunta que sigue, solo da el comentario de transición.
+        Responde con un comentario súper corto (máximo 10 palabras), animado y colombiano. No repitas la pregunta ni digas nada innecesario. Solo una frase de transición bacana.
       `,
     });
 

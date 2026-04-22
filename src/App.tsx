@@ -108,14 +108,18 @@ export default function App() {
     
     setIsTyping(true);
     
-    // Get Gemini vibe if needed
-    const vibeResponse = await getColombianVibrantResponse(text, `Pregunta respondida: ${currentQuestion.text}. Sección: ${currentQuestion.section}`);
-    
-    setMessages(prev => [...prev, { id: Date.now().toString(), text: vibeResponse, sender: 'bot', timestamp: new Date() }]);
-    setIsTyping(false);
-    
-    // Move to next question
+    // Move to next question IMMEDIATELY for speed
     setCurrentQuestionIndex(prev => prev + 1);
+
+    // Get Gemini vibe in background (don't block the next question)
+    getColombianVibrantResponse(text, `Pregunta respondida: ${currentQuestion.text}. Sección: ${currentQuestion.section}`)
+      .then(vibeResponse => {
+        setMessages(prev => [...prev, { id: Date.now().toString(), text: vibeResponse, sender: 'bot', timestamp: new Date() }]);
+        setIsTyping(false);
+      })
+      .catch(() => {
+        setIsTyping(false);
+      });
   };
 
   return (
@@ -128,9 +132,10 @@ export default function App() {
             <div className="flex items-center gap-3">
               <div className="bg-white p-1.5 rounded-xl shadow-inner">
                 <img 
-                  src="https://raw.githubusercontent.com/google-gemini/ai-studio-build-assets/main/app-icons/conectividad_significativa_icon.png" 
+                  src="logo.png" 
                   alt="Logo"
                   className="w-8 h-8 object-contain"
+                  onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
                 />
               </div>
               <div>
@@ -168,9 +173,10 @@ export default function App() {
               )}>
                 {msg.sender === 'bot' ? (
                   <img 
-                    src="https://raw.githubusercontent.com/google-gemini/ai-studio-build-assets/main/app-icons/conectividad_significativa_icon.png" 
+                    src="logo.png" 
                     alt="Bot"
                     className="w-7 h-7 object-contain"
+                    onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
                   />
                 ) : (
                   <User className="w-5 h-5" />
@@ -193,9 +199,10 @@ export default function App() {
             <div className="flex gap-3 mr-auto max-w-[85%]">
               <div className="w-9 h-9 rounded-full bg-white border border-slate-100 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
                 <img 
-                  src="https://raw.githubusercontent.com/google-gemini/ai-studio-build-assets/main/app-icons/conectividad_significativa_icon.png" 
+                  src="logo.png" 
                   alt="Typing"
                   className="w-7 h-7 object-contain animate-pulse"
+                  onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
                 />
               </div>
               <div className="bg-slate-100 px-4 py-3 rounded-2xl rounded-tl-none border border-slate-200 flex items-center gap-2">

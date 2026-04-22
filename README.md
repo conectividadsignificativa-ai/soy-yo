@@ -14,7 +14,10 @@ Este proyecto está configurado para desplegarse automáticamente usando **GitHu
 
 ### Pasos para activar la web:
 1. **Exportar**: Usa el menú *Settings > Export to GitHub* en AI Studio.
-2. **Configurar GitHub Pages**:
+2. **Subir el Logo**: 
+   - En tu repositorio de GitHub, haz clic en **Add file > Upload files**.
+   - Sube la imagen de tu logo y cámbiale el nombre a `logo.png` (debe quedar en la raíz del repositorio).
+3. **Configurar GitHub Pages**:
    - En tu repo de GitHub, ve a **Settings > Pages**.
    - En *Build and deployment > Source*, selecciona **GitHub Actions**.
 3. **Agregar API Key**:
