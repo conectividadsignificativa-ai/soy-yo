@@ -40,75 +40,159 @@ export default function App() {
     const welcome = async () => {
       setIsTyping(true);
       
-      // Try to sign in anonymously if needed, but don't block the welcome message
       try {
         if (!auth.currentUser) {
           await signInAnonymously(auth);
         }
       } catch (err) {
-        console.warn("Auth hint: Anonymous auth might be disabled in Firebase console.", err);
+        console.warn("Auth hint: Anonymous auth might be disabled.", err);
       }
       
-      const welcomeMsg = "¡Hola! Qué bacano que estés por aquí. Soy el asistente de **Conectividad Significativa**. Estamos buscando jóvenes del Caribe y el Pacífico que quieran transformar sus territorios con tecnología. ¿Te animas a contarnos sobre ti? ¡Prometo que es rápido!";
+      const welcomeMsg = `👋 ¡Hola! Nos alegra que estés aquí.
+
+Soy el asistente de la OIT y el UNFPA — dos agencias de la ONU en Colombia. Estamos construyendo una red de jóvenes del Caribe y el Pacífico que quieren liderar la transformación digital en sus territorios.
+
+Este formulario nos ayuda a conocerte y conectarte con oportunidades en tres líneas:
+💼 Empleabilidad digital
+🚀 Emprendimiento digital
+🗳️ Participación en política pública digital
+
+Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?`;
       
       setMessages([
         { id: '1', text: welcomeMsg, sender: 'bot', timestamp: new Date() }
       ]);
       setIsTyping(false);
-      setCurrentQuestionIndex(0);
+      setCurrentQuestionIndex(-1); // -1 means waiting for confirmation
     };
     welcome();
   }, []);
 
-  useEffect(() => {
-    if (currentQuestionIndex >= 0 && currentQuestionIndex < QUESTIONS.length) {
-      const question = QUESTIONS[currentQuestionIndex];
-      setMessages(prev => [
-        ...prev,
-        { id: Date.now().toString(), text: question.text, sender: 'bot', timestamp: new Date() }
-      ]);
-    } else if (currentQuestionIndex === QUESTIONS.length) {
-      handleComplete();
+  const getNextApplicableQuestionIndex = (startIndex: number, currentAnswers: Record<string, any>) => {
+    let nextIndex = startIndex;
+    while (nextIndex < QUESTIONS.length) {
+      const q = QUESTIONS[nextIndex];
+      if (!q.condition || q.condition(currentAnswers)) {
+        return nextIndex;
+      }
+      nextIndex++;
     }
-  }, [currentQuestionIndex]);
+    return nextIndex;
+  };
 
-  const handleComplete = async () => {
+  const handleSend = async (val?: string) => {
+    const text = val || inputValue;
+    if (!text.trim()) return;
+
+    // Add user message to UI
+    setMessages(prev => [...prev, { id: Date.now().toString(), text, sender: 'user', timestamp: new Date() }]);
+    setInputValue('');
+
+    // If waiting for confirmation
+    if (currentQuestionIndex === -1) {
+      if (text.toLowerCase().includes('si') || text.toLowerCase().includes('listo') || text.toLowerCase().includes('dale')) {
+        const firstIdx = getNextApplicableQuestionIndex(0, {});
+        setCurrentQuestionIndex(firstIdx);
+        const q = QUESTIONS[firstIdx];
+        setMessages(prev => [...prev, { id: Date.now().toString(), text: q.text, sender: 'bot', timestamp: new Date() }]);
+      } else {
+        setMessages(prev => [...prev, { id: Date.now().toString(), text: "¿Listo/a para comenzar? Avísame cuando quieras arrancar.", sender: 'bot', timestamp: new Date() }]);
+      }
+      return;
+    }
+
+    const currentQuestion = QUESTIONS[currentQuestionIndex];
+    const newAnswers = { ...answers, [currentQuestion.id]: text };
+    setAnswers(newAnswers);
+    
+    setIsTyping(true);
+    
+    try {
+      const nextIdx = getNextApplicableQuestionIndex(currentQuestionIndex + 1, newAnswers);
+      const isLast = nextIdx >= QUESTIONS.length;
+      
+      const sections = Array.from(new Set(QUESTIONS.map(q => q.section)));
+      const currentSection = currentQuestion.section;
+      const nextSection = isLast ? null : QUESTIONS[nextIdx].section;
+      const sectionChanged = nextSection && nextSection !== currentSection;
+      
+      const sectionIndex = sections.indexOf(currentSection) + 1;
+      const totalSections = sections.length;
+
+      // Get AI's version of the question or transition
+      let prompt = `El usuario respondió: "${text}" a la pregunta "${currentQuestion.text}".`;
+      
+      if (!isLast) {
+        const nextQ = QUESTIONS[nextIdx];
+        prompt += ` La siguiente pregunta es: "${nextQ.text}" de la sección "${nextQ.section}".`;
+        if (nextQ.intro) prompt += ` NOTA: Inicia esta sección diciendo: ${nextQ.intro}`;
+        if (sectionChanged) {
+          prompt += ` IMPORTANTE: Menciona que terminamos la sección "${currentSection}" y ahora vamos a la sección "${nextSection}" (Sección ${sections.indexOf(nextSection) + 1} de ${totalSections}).`;
+        }
+      } else {
+        prompt += " Ya terminamos todas las preguntas. Despídete amablemente según las instrucciones de cierre e invita al resumen.";
+      }
+
+      const vibeResponse = await getColombianVibrantResponse(prompt, `Sección actual: ${currentQuestion.section}. Preguntas totales: ${QUESTIONS.length}`);
+      
+      setMessages(prev => [...prev, { id: `vibe-${Date.now()}`, text: vibeResponse, sender: 'bot', timestamp: new Date() }]);
+      
+      if (!isLast) {
+        setCurrentQuestionIndex(nextIdx);
+      } else {
+        setCurrentQuestionIndex(QUESTIONS.length);
+        handleComplete(newAnswers);
+      }
+    } catch (err) {
+      console.warn("AI logic error, falling back", err);
+      // Fallback: manual next question
+      const nextIdx = getNextApplicableQuestionIndex(currentQuestionIndex + 1, newAnswers);
+      if (nextIdx < QUESTIONS.length) {
+        setMessages(prev => [...prev, { id: Date.now().toString(), text: QUESTIONS[nextIdx].text, sender: 'bot', timestamp: new Date() }]);
+        setCurrentQuestionIndex(nextIdx);
+      } else {
+        setCurrentQuestionIndex(QUESTIONS.length);
+        handleComplete(newAnswers);
+      }
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleComplete = async (finalAnswers: Record<string, any>) => {
     setIsTyping(true);
     try {
       const submissionId = crypto.randomUUID();
       await setDoc(doc(db, 'submissions', submissionId), {
-        ...answers,
+        ...finalAnswers,
         createdAt: serverTimestamp(),
         userId: auth.currentUser?.uid || 'anonymous'
       });
       
-      const finalMsg = "¡Excelente, parce! Ya tenemos toda tu información. Tus datos están guardados de forma segura. Pronto nos pondremos en contacto contigo para seguir construyendo esta red de transformación digital. ¡Estamos en la jugada! 🚀";
-      setMessages(prev => [...prev, { id: 'end', text: finalMsg, sender: 'bot', timestamp: new Date() }]);
+      // Build summary
+      let summaryText = "✅ ¡Listo! Eso es todo. Muchas gracias por tu tiempo — esta información nos ayuda a construir oportunidades reales para jóvenes del Caribe y el Pacífico.\n\nAquí está el resumen de lo que registré:\n\n";
+      
+      const sections = Array.from(new Set(QUESTIONS.map(q => q.section)));
+      sections.forEach(section => {
+        const qInSection = QUESTIONS.filter(q => q.section === section && finalAnswers[q.id]);
+        if (qInSection.length > 0) {
+          summaryText += `**${section.toUpperCase()}**\n`;
+          qInSection.forEach(q => {
+            summaryText += `- ${q.text.split('?')[0]}?: ${finalAnswers[q.id]}\n`;
+          });
+          summaryText += "\n";
+        }
+      });
+
+      summaryText += "\nLa información que compartiste será tratada de forma confidencial por la OIT y el UNFPA, conforme a la Política de Privacidad de las Naciones Unidas: https://www.un.org/es/about-us/privacy-notice";
+
+      setMessages(prev => [...prev, { id: 'end', text: summaryText, sender: 'bot', timestamp: new Date() }]);
       setIsComplete(true);
     } catch (err) {
       console.error(err);
       setError("Huy, tuvimos un pequeño problema al guardar tus datos. ¿Podrías intentarlo de nuevo?");
     }
     setIsTyping(false);
-  };
-
-  const handleSend = async (val?: string) => {
-    if (isTyping) return; // Prevent spamming while bot is thinking
-    
-    const text = val || inputValue;
-    if (!text.trim()) return;
-
-    const currentQuestion = QUESTIONS[currentQuestionIndex];
-    
-    // Add user message to UI
-    setMessages(prev => [...prev, { id: Date.now().toString(), text, sender: 'user', timestamp: new Date() }]);
-    setInputValue('');
-    
-    // Save answer
-    setAnswers(prev => ({ ...prev, [currentQuestion.id]: text }));
-    
-    // Move to next question immediately
-    setCurrentQuestionIndex(prev => prev + 1);
   };
 
   return (
@@ -204,6 +288,19 @@ export default function App() {
 
         {/* Action Area */}
         <footer className="p-4 bg-white border-t border-slate-100">
+          {!isComplete && currentQuestionIndex === -1 && (
+            <div className="flex gap-2">
+              <button 
+                onClick={() => handleSend("¡Sí, listo!")}
+                disabled={isTyping}
+                className="flex-1 bg-blue-600 text-white py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-5 h-5" />
+                ¡Listo/a para comenzar!
+              </button>
+            </div>
+          )}
+
           {!isComplete && currentQuestionIndex >= 0 && currentQuestionIndex < QUESTIONS.length && (
             <div className="space-y-3">
               <QuestionInput 
@@ -242,7 +339,24 @@ interface QuestionInputProps {
 }
 
 function QuestionInput({ question, value, onChange, onSend, disabled }: QuestionInputProps) {
-  if (question.type === 'select' || question.type === 'multi-select') {
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+
+  // Sync internal state for multi-select
+  useEffect(() => {
+    if (question.type === 'multi-select') {
+      setSelectedOptions(value ? value.split(', ') : []);
+    }
+  }, [question, value]);
+
+  const toggleOption = (opt: string) => {
+    const newOptions = selectedOptions.includes(opt)
+      ? selectedOptions.filter(o => o !== opt)
+      : [...selectedOptions, opt];
+    setSelectedOptions(newOptions);
+    onChange(newOptions.join(', '));
+  };
+
+  if (question.type === 'select') {
     return (
       <div className="grid grid-cols-1 gap-2 max-h-[40vh] overflow-y-auto pr-1 custom-scrollbar">
         {question.options?.map((opt) => (
@@ -256,6 +370,66 @@ function QuestionInput({ question, value, onChange, onSend, disabled }: Question
             <Send className="w-4 h-4 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
         ))}
+      </div>
+    );
+  }
+
+  if (question.type === 'multi-select') {
+    return (
+      <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-2 max-h-[35vh] overflow-y-auto pr-1 custom-scrollbar">
+          {question.options?.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => toggleOption(opt)}
+              disabled={disabled}
+              className={cn(
+                "w-full text-left px-4 py-3 rounded-xl border transition-all text-sm flex items-center justify-between",
+                selectedOptions.includes(opt) 
+                  ? "border-blue-500 bg-blue-50 text-blue-700" 
+                  : "border-slate-200 text-gray-700 hover:border-blue-300"
+              )}
+            >
+              {opt}
+              <div className={cn(
+                "w-5 h-5 rounded border flex items-center justify-center",
+                selectedOptions.includes(opt) ? "bg-blue-500 border-blue-500 text-white" : "border-slate-300"
+              )}>
+                {selectedOptions.includes(opt) && <Send className="w-3 h-3" />}
+              </div>
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => onSend()}
+          disabled={disabled || selectedOptions.length === 0}
+          className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-md hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+        >
+          Confirmar selección ({selectedOptions.length})
+        </button>
+      </div>
+    );
+  }
+
+  if (question.type === 'scale') {
+    return (
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex justify-between w-full text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">
+          <span>{question.id === 'p18' ? 'Nada capaz' : 'Nada importante'}</span>
+          <span>{question.id === 'p18' ? 'Totalmente capaz' : 'Muy importante'}</span>
+        </div>
+        <div className="flex justify-between w-full gap-2">
+          {[1, 2, 3, 4, 5].map((num) => (
+            <button
+              key={num}
+              onClick={() => onSend(num.toString())}
+              disabled={disabled}
+              className="flex-1 aspect-square rounded-2xl border-2 border-slate-200 flex items-center justify-center text-lg font-bold text-slate-400 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 transition-all"
+            >
+              {num}
+            </button>
+          ))}
+        </div>
       </div>
     );
   }
