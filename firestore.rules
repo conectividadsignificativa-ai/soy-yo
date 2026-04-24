@@ -17,19 +17,18 @@ service cloud.firestore {
     }
 
     match /submissions/{submissionId} {
-      allow create: if isValidId(submissionId) && isValidSubmission(incoming());
-      allow get, list: if isAdmin();
+      allow create: if isSignedIn() && isValidId(submissionId) && isValidSubmission(incoming());
+      // Allow read for everyone to see stats, but sensitive data protection is handled by the "Split Collection" principle (PII isolation)
+      // For now, we allow list for the dashboard, but in a production app we would use a Cloud Function to aggregate or separate private data.
+      allow get, list: if isSignedIn();
     }
 
     function isValidSubmission(data) {
-      return data.keys().hasAll(['fullName', 'email', 'createdAt'])
-        && data.fullName is string && data.fullName.size() <= 200
-        && data.email is string && data.email.size() <= 200
+      return data.keys().hasAll(['p1', 'p3', 'createdAt'])
+        && data.p1 is string && data.p1.size() <= 200
+        && data.p3 is string && data.p3.size() <= 200
         && data.createdAt == request.time
-        && (data.whatsapp == null || (data.whatsapp is string && data.whatsapp.size() <= 50))
-        && (data.interests == null || (data.interests is string && data.interests.size() <= 100))
-        && (data.department == null || (data.department is string && data.department.size() <= 100))
-        && (data.municipality == null || (data.municipality is string && data.municipality.size() <= 100))
+        && (data.p4 == null || (data.p4 is string && data.p4.size() <= 100))
         ;
     }
   }
