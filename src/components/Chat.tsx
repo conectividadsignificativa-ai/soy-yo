@@ -163,7 +163,10 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
   const handleComplete = async (finalAnswers: Record<string, any>) => {
     setIsTyping(true);
     try {
-      const submissionId = crypto.randomUUID();
+      const submissionId = typeof crypto.randomUUID === 'function' 
+        ? crypto.randomUUID() 
+        : Math.random().toString(36).substring(2) + Date.now().toString(36);
+        
       await setDoc(doc(db, 'submissions', submissionId), {
         ...finalAnswers,
         createdAt: serverTimestamp(),
