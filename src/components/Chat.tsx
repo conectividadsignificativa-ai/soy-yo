@@ -46,8 +46,11 @@ export default function Chat() {
         if (!auth.currentUser) {
           await signInAnonymously(auth);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.warn("Auth hint: Anonymous auth might be disabled.", err);
+        if (err.code === 'auth/admin-restricted-operation') {
+          setError("Error de configuración: El inicio de sesión anónimo está desactivado en Firebase. Por favor actívalo en la consola de Firebase (Authentication > Sign-in method).");
+        }
       }
       
       const welcomeMsg = `👋 ¡Hola! Nos alegra que estés aquí.
