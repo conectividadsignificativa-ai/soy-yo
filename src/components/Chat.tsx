@@ -348,7 +348,7 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
         <div className="p-8 flex flex-col items-center text-center gap-6">
           <div className="w-32 h-32 bg-white/10 rounded-3xl flex items-center justify-center p-4 shadow-inner ring-1 ring-white/10">
             <img 
-              src="icon_idtf.png" 
+              src="https://drive.google.com/uc?export=view&id=174vtmcqrDB0haU8p_G9CVfWZxAn3fOvn" 
               alt="Logo"
               className="w-full h-full object-contain"
               onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
@@ -362,18 +362,19 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
           <div className="w-full h-px bg-white/10 my-2" />
           
           <div className="text-left space-y-4">
-            <div>
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Acerca de</h3>
-              <p className="text-xs text-gray-300 leading-relaxed">
-                Iniciativa de la OIT y el UNFPA para fortalecer las habilidades y oportunidades digitales de las juventudes en el Caribe y el Pacífico colombiano.
-              </p>
-            </div>
-            
-            <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
-              <h3 className="text-[10px] font-bold text-blue-300 uppercase tracking-wider mb-1">Aviso de Privacidad</h3>
-              <p className="text-[10px] text-blue-200/80 leading-relaxed">
-                Tus datos son privados y se usarán únicamente para fines estadísticos y de conexión con oportunidades de formación.
-              </p>
+            <div className="p-5 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+              <h3 className="text-[11px] font-bold text-blue-300 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Aviso de Privacidad</h3>
+              <div className="space-y-4">
+                <p className="text-[11px] text-blue-100/90 leading-relaxed">
+                  La información que proporciones será tratada de forma confidencial y utilizada únicamente con fines relacionados con las actividades de las Naciones Unidas en Colombia, específicamente por la OIT y el UNFPA, en el marco de iniciativas de participación y fortalecimiento juvenil.
+                </p>
+                <p className="text-[11px] text-blue-100/90 leading-relaxed">
+                  Al enviar tus respuestas, autorizas a la OIT y al UNFPA a contactarte para fines relacionados con esta y futuras iniciativas de participación juvenil o transformación digital.
+                </p>
+                <p className="text-[10px] text-blue-300/60 leading-relaxed pt-2 border-t border-white/5">
+                  Conforme a la Política de Privacidad de las Naciones Unidas: <a href="https://www.un.org/es/about-us/privacy-notice" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">un.org/privacy</a>
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -390,7 +391,7 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
           <div className="flex items-center gap-3">
             <div className="md:hidden bg-slate-50 p-1.5 rounded-xl border border-slate-100">
               <img 
-                src="icon_idtf.png" 
+                src="https://drive.google.com/uc?export=view&id=174vtmcqrDB0haU8p_G9CVfWZxAn3fOvn" 
                 alt="Logo"
                 className="w-6 h-6 object-contain"
                 onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
@@ -497,7 +498,7 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
                 )}>
                   {msg.sender === 'bot' ? (
                     <img 
-                      src="icon_idtf.png" 
+                      src="https://drive.google.com/uc?export=view&id=174vtmcqrDB0haU8p_G9CVfWZxAn3fOvn" 
                       alt="Bot"
                       className="w-7 h-7 object-contain"
                       onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
@@ -523,7 +524,7 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
               <div className="flex gap-4 mr-auto w-full max-w-2xl">
                 <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm">
                   <img 
-                    src="icon_idtf.png" 
+                    src="https://drive.google.com/uc?export=view&id=174vtmcqrDB0haU8p_G9CVfWZxAn3fOvn" 
                     alt="Typing"
                     className="w-7 h-7 object-contain animate-pulse"
                     onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
