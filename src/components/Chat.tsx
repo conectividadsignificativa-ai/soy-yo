@@ -75,7 +75,16 @@ export default function Chat() {
         }
       }
       
-      const welcomeMsg = `Hola. Gracias por participar. Te haré algunas preguntas para conocer tu acceso, uso y necesidades en transformación digital. Empezamos.`;
+      const welcomeMsg = `Sabemos que te apasiona la transformación digital, y queremos invitarte a ser parte de algo importante. Desde la Organización Internacional del Trabajo (OIT) y el Fondo de Población de las Naciones Unidas (UNFPA), agencias de la ONU en Colombia, estamos construyendo un banco de datos de jóvenes del Caribe y el Pacífico que lideran o desean sumarse a procesos de transformación digital en sus territorios.
+
+¿Trabajas por un mundo más digital? Entendemos la transformación digital como el proceso mediante el cual adoptamos tecnologías digitales para mejorar procesos, servicios y cómo relacionarnos con las personas.
+
+Buscamos jóvenes con interés en continuar su trayectoria en temas digitales, así como perfiles interesados en futuras oportunidades en tres líneas clave:
+💼 Empleabilidad digital
+🚀 Emprendimiento digital
+🗳️ Participación en política pública digital
+
+Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfocadas en juventudes comprometidas con el desarrollo digital del país.`;
       
       setMessages([
         { id: '1', text: welcomeMsg, sender: 'bot', timestamp: new Date() }
@@ -310,7 +319,18 @@ export default function Chat() {
   };
 
   const handleReset = () => {
-    setMessages([{ id: '1', text: "Hola. Gracias por participar. Te haré algunas preguntas para conocer tu acceso, uso y necesidades en transformación digital. Empezamos.", sender: 'bot', timestamp: new Date() }]);
+    const welcomeMsg = `Sabemos que te apasiona la transformación digital, y queremos invitarte a ser parte de algo importante. Desde la Organización Internacional del Trabajo (OIT) y el Fondo de Población de las Naciones Unidas (UNFPA), agencias de la ONU en Colombia, estamos construyendo un banco de datos de jóvenes del Caribe y el Pacífico que lideran o desean sumarse a procesos de transformación digital en sus territorios.
+
+¿Trabajas por un mundo más digital? Entendemos la transformación digital como el proceso mediante el cual adoptamos tecnologías digitales para mejorar procesos, servicios y cómo relacionarnos con las personas.
+
+Buscamos jóvenes con interés en continuar su trayectoria en temas digitales, así como perfiles interesados en futuras oportunidades en tres líneas clave:
+💼 Empleabilidad digital
+🚀 Emprendimiento digital
+🗳️ Participación en política pública digital
+
+Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfocadas en juventudes comprometidas con el desarrollo digital del país.`;
+
+    setMessages([{ id: '1', text: welcomeMsg, sender: 'bot', timestamp: new Date() }]);
     setCurrentQuestionIndex(-1);
     setAnswers({});
     setInputValue('');
@@ -328,7 +348,7 @@ export default function Chat() {
         <div className="p-8 flex flex-col items-center text-center gap-6">
           <div className="w-32 h-32 bg-slate-50 rounded-3xl flex items-center justify-center p-4 shadow-inner ring-1 ring-slate-100">
             <img 
-              src="logo.png" 
+              src="icon_idtf.png" 
               alt="Logo"
               className="w-full h-full object-contain"
               onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
@@ -370,7 +390,7 @@ export default function Chat() {
           <div className="flex items-center gap-3">
             <div className="md:hidden bg-slate-50 p-1.5 rounded-xl border border-slate-100">
               <img 
-                src="logo.png" 
+                src="icon_idtf.png" 
                 alt="Logo"
                 className="w-6 h-6 object-contain"
                 onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
@@ -477,7 +497,7 @@ export default function Chat() {
                 )}>
                   {msg.sender === 'bot' ? (
                     <img 
-                      src="logo.png" 
+                      src="icon_idtf.png" 
                       alt="Bot"
                       className="w-7 h-7 object-contain"
                       onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
@@ -503,7 +523,7 @@ export default function Chat() {
               <div className="flex gap-4 mr-auto w-full max-w-2xl">
                 <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm">
                   <img 
-                    src="logo.png" 
+                    src="icon_idtf.png" 
                     alt="Typing"
                     className="w-7 h-7 object-contain animate-pulse"
                     onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}

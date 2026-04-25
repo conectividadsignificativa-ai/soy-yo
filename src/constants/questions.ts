@@ -2,11 +2,12 @@ export interface Question {
   id: string;
   variable: string;
   text: string;
-  type: 'text' | 'date' | 'select' | 'multi-select' | 'number';
+  type: 'text' | 'date' | 'select' | 'multi-select' | 'number' | 'scale';
   options?: string[];
   section: string;
   required?: boolean;
   condition?: (answers: Record<string, any>) => boolean;
+  placeholder?: string;
 }
 
 export const QUESTIONS: Question[] = [
