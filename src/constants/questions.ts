@@ -123,8 +123,9 @@ export const QUESTIONS: Question[] = [
     type: 'multi-select',
     options: ['visual', 'auditiva', 'motora', 'cognitiva', 'psicosocial'],
     condition: (a) =>
-      Array.isArray(a.grupos) &&
-      a.grupos.includes('persona_con_discapacidad'),
+  Array.isArray(a.grupos)
+    ? a.grupos.includes('persona_con_discapacidad')
+    : a.grupos === 'persona_con_discapacidad'
   },
   {
     id: 'p10',
