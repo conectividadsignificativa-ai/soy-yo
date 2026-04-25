@@ -289,7 +289,7 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
       await setDoc(doc(db, 'submissions', submissionId), {
         ...finalAnswers,
         createdAt: serverTimestamp(),
-        userId: auth.currentUser?.uid || 'anonymous'
+        userId: auth.currentUser?.uid
       });
       
       // Build summary
@@ -679,8 +679,8 @@ function QuestionInput({ question, value, onChange, onSend, disabled }: Question
     return (
       <div className="flex flex-col items-center gap-3">
         <div className="flex justify-between w-full text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">
-          <span>{question.variable === 'acceso_diario' ? 'Nunca' : 'Mínimo'}</span>
-          <span>{question.variable === 'acceso_diario' ? 'Siempre' : 'Máximo'}</span>
+          <span>{question.labels ? question.labels[0] : 'Mínimo'}</span>
+          <span>{question.labels ? question.labels[1] : 'Máximo'}</span>
         </div>
         <div className="flex justify-between w-full gap-2">
           {[1, 2, 3, 4, 5].map((num) => (
