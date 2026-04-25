@@ -344,9 +344,9 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden font-sans text-gray-900">
       {/* Sidebar - Desktop Only */}
-      <aside className="hidden md:flex md:w-[25%] lg:w-[20%] flex-col bg-white border-r border-slate-200 overflow-y-auto">
+      <aside className="hidden md:flex md:w-[25%] lg:w-[20%] flex-col bg-[#2D2E45] border-r border-slate-700 overflow-y-auto text-white">
         <div className="p-8 flex flex-col items-center text-center gap-6">
-          <div className="w-32 h-32 bg-slate-50 rounded-3xl flex items-center justify-center p-4 shadow-inner ring-1 ring-slate-100">
+          <div className="w-32 h-32 bg-white/10 rounded-3xl flex items-center justify-center p-4 shadow-inner ring-1 ring-white/10">
             <img 
               src="icon_idtf.png" 
               alt="Logo"
@@ -355,30 +355,30 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
             />
           </div>
           <div>
-            <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">Red de Jóvenes</h2>
-            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Conectividad Significativa</p>
+            <h2 className="text-xl font-black text-white tracking-tight uppercase">Red de Jóvenes</h2>
+            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-1">Conectividad Significativa</p>
           </div>
           
-          <div className="w-full h-px bg-slate-100 my-2" />
+          <div className="w-full h-px bg-white/10 my-2" />
           
           <div className="text-left space-y-4">
             <div>
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Acerca de</h3>
-              <p className="text-xs text-gray-500 leading-relaxed">
+              <p className="text-xs text-gray-300 leading-relaxed">
                 Iniciativa de la OIT y el UNFPA para fortalecer las habilidades y oportunidades digitales de las juventudes en el Caribe y el Pacífico colombiano.
               </p>
             </div>
             
-            <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100">
-              <h3 className="text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-1">Aviso de Privacidad</h3>
-              <p className="text-[10px] text-blue-700 leading-relaxed">
+            <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+              <h3 className="text-[10px] font-bold text-blue-300 uppercase tracking-wider mb-1">Aviso de Privacidad</h3>
+              <p className="text-[10px] text-blue-200/80 leading-relaxed">
                 Tus datos son privados y se usarán únicamente para fines estadísticos y de conexión con oportunidades de formación.
               </p>
             </div>
           </div>
         </div>
         
-        <div className="mt-auto p-6 border-t border-slate-100 italic text-[10px] text-gray-400 text-center">
+        <div className="mt-auto p-6 border-t border-white/5 italic text-[10px] text-gray-400 text-center">
           © 2024 OIT & UNFPA Colombia
         </div>
       </aside>
