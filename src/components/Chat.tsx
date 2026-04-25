@@ -273,45 +273,89 @@ export default function Chat() {
   };
 
   return (
-    <div className="min-h-screen bg-white sm:bg-slate-50 flex flex-col items-center justify-center sm:p-4 font-sans text-gray-900">
-      <div id="chat-container" className="w-full h-full sm:h-[85vh] sm:max-w-2xl bg-white sm:rounded-3xl sm:shadow-2xl overflow-hidden flex flex-col border-none sm:border sm:border-slate-100">
+    <div className="flex h-screen w-full bg-slate-50 overflow-hidden font-sans text-gray-900">
+      {/* Sidebar - Desktop Only */}
+      <aside className="hidden md:flex md:w-[25%] lg:w-[20%] flex-col bg-white border-r border-slate-200 overflow-y-auto">
+        <div className="p-8 flex flex-col items-center text-center gap-6">
+          <div className="w-32 h-32 bg-slate-50 rounded-3xl flex items-center justify-center p-4 shadow-inner ring-1 ring-slate-100">
+            <img 
+              src="logo.png" 
+              alt="Logo"
+              className="w-full h-full object-contain"
+              onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
+            />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">Red de Jóvenes</h2>
+            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Conectividad Significativa</p>
+          </div>
+          
+          <div className="w-full h-px bg-slate-100 my-2" />
+          
+          <div className="text-left space-y-4">
+            <div>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Acerca de</h3>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Iniciativa de la OIT y el UNFPA para fortalecer las habilidades y oportunidades digitales de las juventudes en el Caribe y el Pacífico colombiano.
+              </p>
+            </div>
+            
+            <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+              <h3 className="text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-1">Aviso de Privacidad</h3>
+              <p className="text-[10px] text-blue-700 leading-relaxed">
+                Tus datos son privados y se usarán únicamente para fines estadísticos y de conexión con oportunidades de formación.
+              </p>
+            </div>
+          </div>
+        </div>
         
+        <div className="mt-auto p-6 border-t border-slate-100 italic text-[10px] text-gray-400 text-center">
+          © 2024 OIT & UNFPA Colombia
+        </div>
+      </aside>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col bg-white relative">
         {/* Header */}
-        <header className="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex flex-col shadow-lg relative">
-          {/* Gamification HUD */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <div className="bg-white p-1.5 rounded-xl shadow-inner">
-                <img 
-                  src="logo.png" 
-                  alt="Logo"
-                  className="w-8 h-8 object-contain"
-                  onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
-                />
-              </div>
-              <div>
-                <h1 className="font-bold text-lg leading-tight uppercase tracking-tight">Red de Jóvenes</h1>
-                <div className="flex items-center gap-2">
-                  <span className="text-blue-100 text-[10px] uppercase font-medium">Nivel {level}</span>
-                  <div className="w-16 bg-blue-900/50 h-1 rounded-full overflow-hidden">
-                    <div className="bg-yellow-400 h-full" style={{ width: `${points % 100}%` }}></div>
-                  </div>
+        <header className="px-6 py-4 bg-white border-b border-slate-100 flex items-center justify-between shadow-sm z-10">
+          <div className="flex items-center gap-3">
+            <div className="md:hidden bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+              <img 
+                src="logo.png" 
+                alt="Logo"
+                className="w-6 h-6 object-contain"
+                onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
+              />
+            </div>
+            <div>
+              <h1 className="font-bold text-base leading-tight">Caracterización Digital</h1>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-blue-600 uppercase">Nivel {level}</span>
+                <div className="w-20 bg-slate-100 h-1 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="bg-yellow-400 h-full" 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${points % 100}%` }}
+                  />
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-sm">
-                <Trophy className="w-3.5 h-3.5 text-yellow-400" />
-                <span className="text-xs font-bold">{points}</span>
-              </div>
-              <Link to="/stats" className="p-2 hover:bg-white/20 rounded-xl transition-colors" title="Ver Estadísticas">
-                  <LayoutDashboard className="w-5 h-5" />
-              </Link>
-            </div>
           </div>
-          <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
+          
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
+              <Trophy className="w-3.5 h-3.5 text-yellow-500" />
+              <span className="text-xs font-black text-slate-700">{points} pts</span>
+            </div>
+            <Link to="/stats" className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="Ver Estadísticas">
+                <LayoutDashboard className="w-5 h-5" />
+            </Link>
+          </div>
+
+          {/* Progress Bar Fixed at bottom of header */}
+          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-slate-50">
             <motion.div 
-              className="bg-yellow-400 h-full"
+              className="bg-blue-600 h-full"
               initial={{ width: 0 }}
               animate={{ width: `${Math.max(0, (currentQuestionIndex / QUESTIONS.length) * 100)}%` }}
             />
@@ -323,7 +367,7 @@ export default function Chat() {
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                className="absolute top-full left-1/2 -translate-x-1/2 mt-4 z-50 bg-white rounded-2xl shadow-2xl p-4 border border-blue-100 flex flex-col items-center gap-3 w-64 text-center"
+                className="absolute top-20 right-6 z-50 bg-white rounded-2xl shadow-2xl p-4 border border-blue-100 flex flex-col items-center gap-3 w-64 text-center ring-4 ring-blue-50"
               >
                 <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-3xl shadow-inner">
                   {showBadgePopup.icon}
@@ -345,9 +389,9 @@ export default function Chat() {
         </header>
 
         {/* Badges Bar */}
-        <div className="px-6 py-2 bg-slate-50 border-b border-slate-100 flex items-center gap-2 overflow-x-auto no-scrollbar">
-          <span className="text-[10px] font-bold text-gray-400 uppercase whitespace-nowrap">Tus Logros:</span>
-          {earnedBadges.length === 0 && <span className="text-[10px] text-gray-400 italic">Conversa para ganar...</span>}
+        <div className="px-6 py-2 bg-slate-50/50 border-b border-slate-100 flex items-center gap-3 overflow-x-auto no-scrollbar">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Tus Logros:</span>
+          {earnedBadges.length === 0 && <span className="text-[10px] text-slate-300 italic">Comienza a responder para ganar...</span>}
           {earnedBadges.map(bid => {
             const b = BADGES.find(x => x.id === bid);
             return (
@@ -355,107 +399,114 @@ export default function Chat() {
                 key={bid}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="bg-white p-1 rounded-lg shadow-sm border border-slate-200 flex items-center gap-1.5 px-2"
+                className="bg-white p-1 rounded-lg shadow-sm border border-slate-200 flex items-center gap-1.5 px-3"
                 title={b?.description}
               >
                 <span className="text-sm">{b?.icon}</span>
-                <span className="text-[10px] font-medium text-gray-600 whitespace-nowrap">{b?.name}</span>
+                <span className="text-[10px] font-bold text-slate-600 whitespace-nowrap">{b?.name}</span>
               </motion.div>
             );
           })}
         </div>
 
-
         {/* Message Area */}
-        <main className="flex-1 overflow-y-auto p-6 space-y-5 scroll-smooth custom-scrollbar">
-          {messages.map((msg) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              className={cn(
-                "flex gap-3 max-w-[85%]",
-                msg.sender === 'bot' ? "mr-auto" : "ml-auto flex-row-reverse"
-              )}
-            >
-              <div className="w-9 h-9 rounded-full bg-white border border-slate-100 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
-                {msg.sender === 'bot' ? (
+        <main className="flex-1 overflow-y-auto p-6 md:p-12 space-y-8 scroll-smooth custom-scrollbar">
+          <div className="max-w-4xl mx-auto w-full space-y-8">
+            {messages.map((msg) => (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                className={cn(
+                  "flex gap-4",
+                  msg.sender === 'bot' ? "mr-auto w-full max-w-3xl" : "ml-auto flex-row-reverse"
+                )}
+              >
+                <div className={cn(
+                  "w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border",
+                  msg.sender === 'bot' ? "bg-white border-slate-200" : "bg-blue-700 border-blue-800"
+                )}>
+                  {msg.sender === 'bot' ? (
+                    <img 
+                      src="logo.png" 
+                      alt="Bot"
+                      className="w-7 h-7 object-contain"
+                      onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
+                    />
+                  ) : (
+                    <User className="w-5 h-5 text-white" />
+                  )}
+                </div>
+
+                <div className={cn(
+                  "px-5 py-4 rounded-3xl text-sm leading-relaxed shadow-sm",
+                  msg.sender === 'bot' 
+                    ? "bg-slate-50 text-gray-800 rounded-tl-none border border-slate-100" 
+                    : "bg-blue-600 text-white rounded-tr-none"
+                )}>
+                  <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
+                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+            {isTyping && (
+              <div className="flex gap-4 mr-auto w-full max-w-2xl">
+                <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm">
                   <img 
                     src="logo.png" 
-                    alt="Bot"
-                    className="w-7 h-7 object-contain"
+                    alt="Typing"
+                    className="w-7 h-7 object-contain animate-pulse"
                     onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
                   />
-                ) : (
-                  <User className="w-5 h-5 text-blue-600" />
-                )}
-              </div>
-
-              <div className={cn(
-                "px-4 py-3 rounded-2xl text-sm leading-relaxed",
-                msg.sender === 'bot' 
-                  ? "bg-slate-100 text-gray-800 rounded-tl-none border border-slate-200 shadow-sm" 
-                  : "bg-blue-600 text-white rounded-tr-none shadow-md"
-              )}>
-                <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
-                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                </div>
+                <div className="bg-slate-50 px-5 py-4 rounded-3xl rounded-tl-none border border-slate-100 flex items-center gap-3">
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                  <span className="text-xs text-gray-400 font-medium italic uppercase tracking-wider">Escribiendo...</span>
                 </div>
               </div>
-            </motion.div>
-          ))}
-          {isTyping && (
-            <div className="flex gap-3 mr-auto max-w-[85%]">
-              <div className="w-9 h-9 rounded-full bg-white border border-slate-100 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
-                <img 
-                  src="logo.png" 
-                  alt="Typing"
-                  className="w-7 h-7 object-contain animate-pulse"
-                  onError={(e) => (e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png")}
-                />
-              </div>
-              <div className="bg-slate-100 px-4 py-3 rounded-2xl rounded-tl-none border border-slate-200 flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
-                <span className="text-xs text-gray-500 italic">Escribiendo...</span>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </main>
 
         {/* Action Area */}
-        <footer className="p-4 bg-white border-t border-slate-100">
-          {!isComplete && currentQuestionIndex === -1 && (
-            <div className="flex gap-2">
-              <button 
-                onClick={() => handleSend("¡Sí, listo!")}
-                disabled={isTyping}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
-              >
-                <Sparkles className="w-5 h-5" />
-                ¡Listo/a para comenzar!
-              </button>
-            </div>
-          )}
+        <footer className="p-6 md:p-10 bg-white border-t border-slate-100">
+          <div className="max-w-4xl mx-auto w-full shadow-2xl shadow-blue-900/5 rounded-3xl ring-1 ring-slate-100">
+            {!isComplete && currentQuestionIndex === -1 && (
+              <div className="p-4 flex gap-2">
+                <button 
+                  onClick={() => handleSend("¡Sí, listo!")}
+                  disabled={isTyping}
+                  className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-3"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  ¡Empezar encuesta!
+                </button>
+              </div>
+            )}
 
-          {!isComplete && currentQuestionIndex >= 0 && currentQuestionIndex < QUESTIONS.length && (
-            <div className="space-y-3">
-              <QuestionInput 
-                question={QUESTIONS[currentQuestionIndex]}
-                value={inputValue}
-                onChange={setInputValue}
-                onSend={handleSend}
-                disabled={isTyping} 
-              />
-            </div>
-          )}
-          {isComplete && (
-            <div className="text-center py-4 text-green-600 font-medium flex items-center justify-center gap-2">
-              <Sparkles className="w-5 h-5" />
-              ¡Proceso terminado con éxito!
-            </div>
-          )}
+            {!isComplete && currentQuestionIndex >= 0 && currentQuestionIndex < QUESTIONS.length && (
+              <div className="p-4">
+                <QuestionInput 
+                  question={QUESTIONS[currentQuestionIndex]}
+                  value={inputValue}
+                  onChange={setInputValue}
+                  onSend={handleSend}
+                  disabled={isTyping} 
+                />
+              </div>
+            )}
+            {isComplete && (
+              <div className="p-8 text-center text-emerald-600 font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-emerald-50/50 rounded-3xl animate-pulse">
+                <Sparkles className="w-6 h-6" />
+                ¡Formulario Enviado!
+              </div>
+            )}
+          </div>
+
           {error && (
-            <div className="mt-2 p-3 bg-red-50 text-red-600 rounded-xl flex items-center gap-2 text-sm">
-              <AlertCircle className="w-4 h-4" />
+            <div className="max-w-4xl mx-auto mt-4 p-4 bg-red-50 text-red-700 rounded-2xl flex items-center gap-3 text-sm font-medium border border-red-100">
+              <AlertCircle className="w-5 h-5 text-red-500" />
               {error}
             </div>
           )}
