@@ -130,42 +130,79 @@ export default function Chat() {
     const newAnswers = { ...answers, [currentQuestion.variable]: text };
     setAnswers(newAnswers);
     
-    // Gamification Logic: Award points
-    const pointsAwarded = 10;
-    const newPoints = points + pointsAwarded;
-    setPoints(newPoints);
-    setLevel(calculateLevel(newPoints));
-
-    // Check for new badges
-    const newBadge = BADGES.find(b => b.requirement <= newPoints && !earnedBadges.includes(b.id));
-    if (newBadge) {
-      setEarnedBadges(prev => [...prev, newBadge.id]);
-      setShowBadgePopup(newBadge);
-      // Sync to cloud
-      if (auth.currentUser) {
-        updateDoc(doc(db, 'profiles', auth.currentUser.uid), {
-          points: increment(pointsAwarded),
-          badges: arrayUnion(newBadge.id)
-        }).catch(console.error);
-      }
-    } else if (auth.currentUser) {
-      updateDoc(doc(db, 'profiles', auth.currentUser.uid), {
-        points: increment(pointsAwarded)
-      }).catch(console.error);
-    }
-    
     setIsTyping(true);
     
     try {
       const nextIdx = getNextApplicableQuestionIndex(currentQuestionIndex + 1, newAnswers);
       const isLast = nextIdx >= QUESTIONS.length;
       
-      const sections = Array.from(new Set(QUESTIONS.map(q => q.section)));
       const currentSection = currentQuestion.section;
       const nextSection = isLast ? null : QUESTIONS[nextIdx].section;
       const sectionChanged = nextSection && nextSection !== currentSection;
-      
-      const totalSections = sections.length;
+
+      // Award points and badges based on section completion
+      let pointsAwarded = 0;
+      let badgeToAward: Badge | null = null;
+
+      if (sectionChanged || isLast) {
+        const sectionToBadgeMap: Record<string, string> = {
+          'Información Básica': 'perfil_creado',
+          'Uso de Internet': 'explorador_digital',
+          'Habilidades Digitales': 'aprendiz_digital',
+          'Acceso y Conectividad': 'conectado',
+          'Riesgos Digitales': 'navegante_consciente',
+          'Áreas de Interés': 'rumbo_digital',
+          'Empleabilidad Digital': 'talento_digital',
+          'Emprendimiento Digital': 'constructor_ideas',
+          'Política Digital': 'voz_ciudadana'
+        };
+
+        const bid = sectionToBadgeMap[currentSection];
+        if (bid && !earnedBadges.includes(bid)) {
+          badgeToAward = BADGES.find(b => b.id === bid) || null;
+        }
+
+        // Special case for IA after P25
+        if (currentQuestion.variable === 'uso_ia' || currentQuestion.variable === 'uso_ia_para') {
+          if (newAnswers.uso_ia === 'si' && !earnedBadges.includes('explorador_ia')) {
+            badgeToAward = BADGES.find(b => b.id === 'explorador_ia') || null;
+          }
+        }
+
+        if (isLast && !earnedBadges.includes('agente_transformacion')) {
+          badgeToAward = BADGES.find(b => b.id === 'agente_transformacion') || null;
+        }
+      }
+
+      if (badgeToAward) {
+        pointsAwarded = badgeToAward.points;
+        const newPoints = points + pointsAwarded;
+        setPoints(newPoints);
+        setLevel(calculateLevel(newPoints));
+        setEarnedBadges(prev => [...prev, badgeToAward!.id]);
+        setShowBadgePopup(badgeToAward);
+
+        const badgeMsg = `${badgeToAward.description}\n\n**+${pointsAwarded} puntos**\nSigues avanzando 💪\nVamos muy bien 🚀`;
+        setMessages(prev => [...prev, { id: `badge-msg-${Date.now()}`, text: badgeMsg, sender: 'bot', timestamp: new Date() }]);
+
+        if (auth.currentUser) {
+          updateDoc(doc(db, 'profiles', auth.currentUser.uid), {
+            points: increment(pointsAwarded),
+            badges: arrayUnion(badgeToAward.id)
+          }).catch(console.error);
+        }
+      } else {
+        // Base points per question
+        const basePoints = 5;
+        const newPoints = points + basePoints;
+        setPoints(newPoints);
+        setLevel(calculateLevel(newPoints));
+        if (auth.currentUser) {
+          updateDoc(doc(db, 'profiles', auth.currentUser.uid), {
+            points: increment(basePoints)
+          }).catch(console.error);
+        }
+      }
 
       // Get AI's version of the question or transition
       let prompt = `El usuario respondió: "${text}" a la pregunta "${currentQuestion.text}".`;
@@ -270,6 +307,18 @@ export default function Chat() {
       setError("Huy, tuvimos un pequeño problema al guardar tus datos. ¿Podrías intentarlo de nuevo?");
     }
     setIsTyping(false);
+  };
+
+  const handleReset = () => {
+    setMessages([{ id: '1', text: "Hola. Gracias por participar. Te haré algunas preguntas para conocer tu acceso, uso y necesidades en transformación digital. Empezamos.", sender: 'bot', timestamp: new Date() }]);
+    setCurrentQuestionIndex(-1);
+    setAnswers({});
+    setInputValue('');
+    setIsComplete(false);
+    setPoints(0);
+    setLevel(1);
+    setEarnedBadges([]);
+    setShowBadgePopup(null);
   };
 
   return (
@@ -497,9 +546,17 @@ export default function Chat() {
               </div>
             )}
             {isComplete && (
-              <div className="p-8 text-center text-emerald-600 font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-emerald-50/50 rounded-3xl animate-pulse">
-                <Sparkles className="w-6 h-6" />
-                ¡Formulario Enviado!
+              <div className="p-4 flex flex-col gap-4">
+                <div className="p-8 text-center text-emerald-600 font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-emerald-50/50 rounded-3xl">
+                  <Sparkles className="w-6 h-6" />
+                  ¡Formulario Enviado!
+                </div>
+                <button 
+                  onClick={handleReset}
+                  className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all"
+                >
+                  Nueva Encuesta
+                </button>
               </div>
             )}
           </div>

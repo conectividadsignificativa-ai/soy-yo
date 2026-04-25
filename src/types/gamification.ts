@@ -3,44 +3,86 @@ export interface Badge {
   name: string;
   description: string;
   icon: string;
-  requirement: number; // Points needed or specific condition
+  points: number;
 }
 
 export const BADGES: Badge[] = [
   {
-    id: 'iniciado',
-    name: 'Joven Iniciado',
-    description: 'Comenzaste tu camino en la red de conectividad.',
-    icon: '🌱',
-    requirement: 10
+    id: 'perfil_creado',
+    name: 'Perfil creado',
+    description: '✅ ¡Listo! Ya completaste tu información básica.',
+    icon: '🪪',
+    points: 50
   },
   {
-    id: 'comunicador',
-    name: 'Comunicador Digital',
-    description: 'Completaste la sección de Información Básica.',
-    icon: '📱',
-    requirement: 100
+    id: 'explorador_digital',
+    name: 'Explorador/a digital',
+    description: '🌍 ¡Genial! Ya sabemos cómo usas internet en tu día a día.',
+    icon: '🌍',
+    points: 60
   },
   {
-    id: 'experto_ciber',
-    name: 'Experto en Seguridad',
-    description: 'Demostraste conocimientos en riesgos digitales.',
+    id: 'aprendiz_digital',
+    name: 'Aprendiz digital',
+    description: '💡 Gracias por contarnos sobre tus habilidades digitales.',
+    icon: '🔧',
+    points: 60
+  },
+  {
+    id: 'conectado',
+    name: 'Conectado/a',
+    description: '📡 Tu experiencia de acceso y conectividad es muy importante.',
+    icon: '📡',
+    points: 50
+  },
+  {
+    id: 'navegante_consciente',
+    name: 'Navegante consciente',
+    description: '🛡️ Gracias por reflexionar sobre los riesgos y la seguridad en internet.',
     icon: '🛡️',
-    requirement: 300
+    points: 60
   },
   {
-    id: 'lider_territorial',
-    name: 'Líder Territorial',
-    description: 'Tu perfil es clave para la transformación de tu región.',
-    icon: '🌊',
-    requirement: 500
+    id: 'explorador_ia',
+    name: 'Explorador/a de IA',
+    description: '🤖 La inteligencia artificial también hace parte de tu camino digital.',
+    icon: '🔮',
+    points: 40
   },
   {
-    id: 'visionario',
-    name: 'Visionario Digital',
-    description: 'Completaste todo el formulario y trazaste tu camino.',
+    id: 'rumbo_digital',
+    name: 'Rumbo digital',
+    description: '🧭 Tener claro hacia dónde quieres aportar es un gran paso.',
+    icon: '🧭',
+    points: 40
+  },
+  {
+    id: 'talento_digital',
+    name: 'Talento digital',
+    description: '💼 Tu interés en la empleabilidad digital abre nuevas oportunidades.',
+    icon: '🧑‍💻',
+    points: 50
+  },
+  {
+    id: 'constructor_ideas',
+    name: 'Constructor/a de ideas',
+    description: '🚀 Las ideas también transforman territorios y comunidades.',
     icon: '🚀',
-    requirement: 800
+    points: 70
+  },
+  {
+    id: 'voz_ciudadana',
+    name: 'Voz ciudadana digital',
+    description: '🗳️ Participar también es una forma de transformar lo digital.',
+    icon: '🗳️',
+    points: 60
+  },
+  {
+    id: 'agente_transformacion',
+    name: 'Agente de transformación digital',
+    description: '🌟 ¡Felicitaciones! Completaste toda la encuesta.',
+    icon: '🌟',
+    points: 100
   }
 ];
 
@@ -53,9 +95,5 @@ export interface UserProfile {
 }
 
 export const calculateLevel = (points: number) => {
-  return Math.floor(points / 100) + 1;
-};
-
-export const getNextBadge = (points: number, currentBadges: string[]) => {
-  return BADGES.find(b => b.requirement > points && !currentBadges.includes(b.id));
+  return Math.floor(points / 200) + 1;
 };
