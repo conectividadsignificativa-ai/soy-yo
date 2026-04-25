@@ -75,16 +75,7 @@ export default function Chat() {
         }
       }
       
-      const welcomeMsg = `👋 ¡Hola! Nos alegra que estés aquí.
-
-Soy el asistente de la OIT y el UNFPA — dos agencias de la ONU en Colombia. Estamos construyendo una red de jóvenes del Caribe y el Pacífico que quieren liderar la transformación digital en sus territorios.
-
-Este formulario nos ayuda a conocerte y conectarte con oportunidades en tres líneas:
-💼 Empleabilidad digital
-🚀 Emprendimiento digital
-🗳️ Participación en política pública digital
-
-Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?`;
+      const welcomeMsg = `Hola. Gracias por participar. Te haré algunas preguntas para conocer tu acceso, uso y necesidades en transformación digital. Empezamos.`;
       
       setMessages([
         { id: '1', text: welcomeMsg, sender: 'bot', timestamp: new Date() }
@@ -99,6 +90,7 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
     let nextIndex = startIndex;
     while (nextIndex < QUESTIONS.length) {
       const q = QUESTIONS[nextIndex];
+      // Note: we check the condition using the variables stored in currentAnswers
       if (!q.condition || q.condition(currentAnswers)) {
         return nextIndex;
       }
@@ -117,19 +109,25 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
 
     // If waiting for confirmation
     if (currentQuestionIndex === -1) {
-      if (text.toLowerCase().includes('si') || text.toLowerCase().includes('listo') || text.toLowerCase().includes('dale')) {
-        const firstIdx = getNextApplicableQuestionIndex(0, {});
-        setCurrentQuestionIndex(firstIdx);
-        const q = QUESTIONS[firstIdx];
-        setMessages(prev => [...prev, { id: `bot-${Date.now()}`, text: q.text, sender: 'bot', timestamp: new Date() }]);
-      } else {
-        setMessages(prev => [...prev, { id: `bot-retry-${Date.now()}`, text: "¿Listo/a para comenzar? Avísame cuando quieras arrancar.", sender: 'bot', timestamp: new Date() }]);
-      }
+      const firstIdx = getNextApplicableQuestionIndex(0, {});
+      setCurrentQuestionIndex(firstIdx);
+      const q = QUESTIONS[firstIdx];
+      setMessages(prev => [...prev, { id: `bot-${Date.now()}`, text: q.text, sender: 'bot', timestamp: new Date() }]);
       return;
     }
 
     const currentQuestion = QUESTIONS[currentQuestionIndex];
-    const newAnswers = { ...answers, [currentQuestion.id]: text };
+    
+    // Validate email if it's p3
+    if (currentQuestion.variable === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(text)) {
+        setMessages(prev => [...prev, { id: `err-${Date.now()}`, text: "Por favor, ingresa un correo electrónico válido.", sender: 'bot', timestamp: new Date() }]);
+        return;
+      }
+    }
+
+    const newAnswers = { ...answers, [currentQuestion.variable]: text };
     setAnswers(newAnswers);
     
     // Gamification Logic: Award points
@@ -175,12 +173,8 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
       if (!isLast) {
         const nextQ = QUESTIONS[nextIdx];
         prompt += ` La siguiente pregunta es: "${nextQ.text}" de la sección "${nextQ.section}".`;
-        if (nextQ.intro) prompt += ` NOTA: Inicia esta sección diciendo: ${nextQ.intro}`;
-        if (sectionChanged) {
-          prompt += ` IMPORTANTE: Menciona que terminamos la sección "${currentSection}" y ahora vamos a la sección "${nextSection}" (Sección ${sections.indexOf(nextSection) + 1} de ${totalSections}).`;
-        }
       } else {
-        prompt += " Ya terminamos todas las preguntas. Despídete amablemente según las instrucciones de cierre e invita al resumen.";
+        prompt += " Ya terminamos todas las preguntas. Despídete amablemente diciendo: “Gracias por completar la encuesta. Tu participación es muy importante para fortalecer iniciativas de transformación digital.”";
       }
 
       const vibeResponse = await getColombianVibrantResponse(prompt, `Sección actual: ${currentQuestion.section}. Preguntas totales: ${QUESTIONS.length}`);
@@ -204,6 +198,13 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
           setMessages(prev => [...prev, { 
             id: `bot-final-vibe-${Date.now()}`, 
             text: vibeResponse, 
+            sender: 'bot', 
+            timestamp: new Date() 
+          }]);
+        } else {
+          setMessages(prev => [...prev, { 
+            id: `bot-final-def-${Date.now()}`, 
+            text: "Gracias por completar la encuesta. Tu participación es muy importante para fortalecer iniciativas de transformación digital.", 
             sender: 'bot', 
             timestamp: new Date() 
           }]);
@@ -246,15 +247,15 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
       });
       
       // Build summary
-      let summaryText = "✅ ¡Listo! Eso es todo. Muchas gracias por tu tiempo — esta información nos ayuda a construir oportunidades reales para jóvenes del Caribe y el Pacífico.\n\nAquí está el resumen de lo que registré:\n\n";
+      let summaryText = "✅ ¡Listo! Tu participación es muy importante para fortalecer iniciativas de transformación digital. Aquí está el resumen de lo que registré:\n\n";
       
       const sections = Array.from(new Set(QUESTIONS.map(q => q.section)));
       sections.forEach(section => {
-        const qInSection = QUESTIONS.filter(q => q.section === section && finalAnswers[q.id]);
+        const qInSection = QUESTIONS.filter(q => q.section === section && finalAnswers[q.variable]);
         if (qInSection.length > 0) {
           summaryText += `**${section.toUpperCase()}**\n`;
           qInSection.forEach(q => {
-            summaryText += `- ${q.text.split('?')[0]}?: ${finalAnswers[q.id]}\n`;
+            summaryText += `- ${q.text.split('?')[0]}?: ${finalAnswers[q.variable]}\n`;
           });
           summaryText += "\n";
         }
@@ -549,8 +550,8 @@ function QuestionInput({ question, value, onChange, onSend, disabled }: Question
     return (
       <div className="flex flex-col items-center gap-3">
         <div className="flex justify-between w-full text-[10px] text-gray-400 font-medium px-1 uppercase tracking-wider">
-          <span>{question.id === 'p18' ? 'Nada capaz' : 'Nada importante'}</span>
-          <span>{question.id === 'p18' ? 'Totalmente capaz' : 'Muy importante'}</span>
+          <span>{question.variable === 'acceso_diario' ? 'Nunca' : 'Mínimo'}</span>
+          <span>{question.variable === 'acceso_diario' ? 'Siempre' : 'Máximo'}</span>
         </div>
         <div className="flex justify-between w-full gap-2">
           {[1, 2, 3, 4, 5].map((num) => (
