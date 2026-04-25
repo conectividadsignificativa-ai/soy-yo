@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, User, Bot, Loader2, Sparkles, AlertCircle, LayoutDashboard } from 'lucide-react';
+import { Send, User, Bot, Loader2, Sparkles, AlertCircle, LayoutDashboard, Trophy, Star, Target, Award } from 'lucide-react';
 import { db, auth } from '../lib/firebase';
 import { signInAnonymously } from 'firebase/auth';
-import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, getDoc, serverTimestamp, updateDoc, increment, arrayUnion } from 'firebase/firestore';
 import { QUESTIONS, Question } from '../constants/questions';
 import { getColombianVibrantResponse } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Link } from 'react-router-dom';
+import { BADGES, calculateLevel, Badge } from '../types/gamification';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -30,6 +31,12 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Gamification State
+  const [points, setPoints] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [earnedBadges, setEarnedBadges] = useState<string[]>([]);
+  const [showBadgePopup, setShowBadgePopup] = useState<Badge | null>(null);
 
   useEffect(() => {
     const container = document.querySelector('main');
@@ -44,7 +51,22 @@ export default function Chat() {
       
       try {
         if (!auth.currentUser) {
-          await signInAnonymously(auth);
+          const userCred = await signInAnonymously(auth);
+          // Load user profile if exists
+          const profileDoc = await getDoc(doc(db, 'profiles', userCred.user.uid));
+          if (profileDoc.exists()) {
+            const data = profileDoc.data();
+            setPoints(data.points || 0);
+            setLevel(calculateLevel(data.points || 0));
+            setEarnedBadges(data.badges || []);
+          } else {
+            // New profile
+            await setDoc(doc(db, 'profiles', userCred.user.uid), {
+              points: 0,
+              badges: [],
+              createdAt: serverTimestamp()
+            });
+          }
         }
       } catch (err: any) {
         console.warn("Auth hint: Anonymous auth might be disabled.", err);
@@ -109,6 +131,30 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
     const currentQuestion = QUESTIONS[currentQuestionIndex];
     const newAnswers = { ...answers, [currentQuestion.id]: text };
     setAnswers(newAnswers);
+    
+    // Gamification Logic: Award points
+    const pointsAwarded = 10;
+    const newPoints = points + pointsAwarded;
+    setPoints(newPoints);
+    setLevel(calculateLevel(newPoints));
+
+    // Check for new badges
+    const newBadge = BADGES.find(b => b.requirement <= newPoints && !earnedBadges.includes(b.id));
+    if (newBadge) {
+      setEarnedBadges(prev => [...prev, newBadge.id]);
+      setShowBadgePopup(newBadge);
+      // Sync to cloud
+      if (auth.currentUser) {
+        updateDoc(doc(db, 'profiles', auth.currentUser.uid), {
+          points: increment(pointsAwarded),
+          badges: arrayUnion(newBadge.id)
+        }).catch(console.error);
+      }
+    } else if (auth.currentUser) {
+      updateDoc(doc(db, 'profiles', auth.currentUser.uid), {
+        points: increment(pointsAwarded)
+      }).catch(console.error);
+    }
     
     setIsTyping(true);
     
@@ -207,7 +253,8 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
       <div id="chat-container" className="w-full h-full sm:h-[85vh] sm:max-w-2xl bg-white sm:rounded-3xl sm:shadow-2xl overflow-hidden flex flex-col border-none sm:border sm:border-slate-100">
         
         {/* Header */}
-        <header className="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex flex-col shadow-lg">
+        <header className="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex flex-col shadow-lg relative">
+          {/* Gamification HUD */}
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
               <div className="bg-white p-1.5 rounded-xl shadow-inner">
@@ -219,13 +266,24 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
                 />
               </div>
               <div>
-                <h1 className="font-bold text-lg leading-tight uppercase tracking-tight">Conectividad Significativa</h1>
-                <p className="text-blue-100 text-[10px] uppercase font-medium">OIT & UNFPA Colombia</p>
+                <h1 className="font-bold text-lg leading-tight uppercase tracking-tight">Red de Jóvenes</h1>
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-100 text-[10px] uppercase font-medium">Nivel {level}</span>
+                  <div className="w-16 bg-blue-900/50 h-1 rounded-full overflow-hidden">
+                    <div className="bg-yellow-400 h-full" style={{ width: `${points % 100}%` }}></div>
+                  </div>
+                </div>
               </div>
             </div>
-            <Link to="/stats" className="p-2 hover:bg-white/20 rounded-xl transition-colors" title="Ver Estadísticas">
-                <LayoutDashboard className="w-5 h-5" />
-            </Link>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-sm">
+                <Trophy className="w-3.5 h-3.5 text-yellow-400" />
+                <span className="text-xs font-bold">{points}</span>
+              </div>
+              <Link to="/stats" className="p-2 hover:bg-white/20 rounded-xl transition-colors" title="Ver Estadísticas">
+                  <LayoutDashboard className="w-5 h-5" />
+              </Link>
+            </div>
           </div>
           <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
             <motion.div 
@@ -234,7 +292,54 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
               animate={{ width: `${Math.max(0, (currentQuestionIndex / QUESTIONS.length) * 100)}%` }}
             />
           </div>
+
+          <AnimatePresence>
+            {showBadgePopup && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                className="absolute top-full left-1/2 -translate-x-1/2 mt-4 z-50 bg-white rounded-2xl shadow-2xl p-4 border border-blue-100 flex flex-col items-center gap-3 w-64 text-center"
+              >
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-3xl shadow-inner">
+                  {showBadgePopup.icon}
+                </div>
+                <div>
+                  <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">NUEVA INSIGNIA</p>
+                  <h4 className="text-gray-900 font-bold">{showBadgePopup.name}</h4>
+                  <p className="text-xs text-gray-500 mt-1">{showBadgePopup.description}</p>
+                </div>
+                <button 
+                  onClick={() => setShowBadgePopup(null)}
+                  className="w-full bg-blue-600 text-white text-xs font-bold py-2 rounded-xl"
+                >
+                  ¡Genial!
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </header>
+
+        {/* Badges Bar */}
+        <div className="px-6 py-2 bg-slate-50 border-b border-slate-100 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <span className="text-[10px] font-bold text-gray-400 uppercase whitespace-nowrap">Tus Logros:</span>
+          {earnedBadges.length === 0 && <span className="text-[10px] text-gray-400 italic">Conversa para ganar...</span>}
+          {earnedBadges.map(bid => {
+            const b = BADGES.find(x => x.id === bid);
+            return (
+              <motion.div 
+                key={bid}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="bg-white p-1 rounded-lg shadow-sm border border-slate-200 flex items-center gap-1.5 px-2"
+                title={b?.description}
+              >
+                <span className="text-sm">{b?.icon}</span>
+                <span className="text-[10px] font-medium text-gray-600 whitespace-nowrap">{b?.name}</span>
+              </motion.div>
+            );
+          })}
+        </div>
 
 
         {/* Message Area */}

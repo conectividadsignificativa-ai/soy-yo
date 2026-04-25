@@ -3,9 +3,9 @@ import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, Legend
+  PieChart, Pie, Cell, Legend, AreaChart, Area
 } from 'recharts';
-import { LayoutDashboard, Users, Globe, BookOpen, Brain, Zap, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, Users, Globe, BookOpen, Brain, Zap, ArrowLeft, Trophy, Award, Star } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 
@@ -13,6 +13,7 @@ const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
 
 export default function Dashboard() {
   const [data, setData] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,8 +23,12 @@ export default function Dashboard() {
         const querySnapshot = await getDocs(q);
         const submissions = querySnapshot.docs.map(doc => doc.data());
         setData(submissions);
+
+        const pq = query(collection(db, 'profiles'), orderBy('points', 'desc'));
+        const pSnapshot = await getDocs(pq);
+        setProfiles(pSnapshot.docs.map(doc => doc.data()));
       } catch (error) {
-        console.error("Error fetching submissions:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
@@ -89,9 +94,9 @@ export default function Dashboard() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard icon={<Users className="text-blue-600" />} label="Total Inscritos" value={data.length} color="bg-blue-50" />
-          <StatCard icon={<Globe className="text-emerald-600" />} label="Zonas Cubiertas" value={new Set(data.map(d => d.p6)).size} color="bg-emerald-50" />
-          <StatCard icon={<BookOpen className="text-amber-600" />} label="Niveles de Estudio" value={new Set(data.map(d => d.p12)).size} color="bg-amber-50" />
-          <StatCard icon={<Brain className="text-purple-600" />} label="Líneas de Interés" value={interestData.length} color="bg-purple-50" />
+          <StatCard icon={<Trophy className="text-amber-600" />} label="Puntos Totales" value={profiles.reduce((acc, p) => acc + (p.points || 0), 0)} color="bg-amber-50" />
+          <StatCard icon={<Award className="text-purple-600" />} label="Insignias Ganadas" value={profiles.reduce((acc, p) => acc + (p.badges?.length || 0), 0)} color="bg-purple-50" />
+          <StatCard icon={<Zap className="text-emerald-600" />} label="Nivel Promedio" value={profiles.length ? (profiles.reduce((acc, p) => acc + (Math.floor((p.points || 0)/100)+1), 0) / profiles.length).toFixed(1) : 0} color="bg-emerald-50" />
         </div>
 
         {/* Charts Section */}
@@ -172,6 +177,20 @@ export default function Dashboard() {
                   <Tooltip />
                   <Legend verticalAlign="bottom" layout="horizontal" />
                 </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </ChartContainer>
+
+          <ChartContainer title="Distribución de Puntos por Usuario">
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={profiles.slice(0, 20).map((p, i) => ({ name: `User ${i+1}`, points: p.points }))}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" hide />
+                  <YAxis />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="points" stroke="#8b5cf6" fill="#c4b5fd" />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </ChartContainer>

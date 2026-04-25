@@ -24,12 +24,26 @@
         "userId": { "type": "string" }
       },
       "required": ["p1", "p3", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Gamification profile for the user.",
+      "type": "object",
+      "properties": {
+        "points": { "type": "integer" },
+        "badges": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "firestore": {
     "/submissions/{submissionId}": {
       "schema": "BeneficiarySubmission",
       "description": "Collection of chatbot submissions."
+    },
+    "/profiles/{userId}": {
+      "schema": "UserProfile",
+      "description": "User gamification profiles."
     }
   }
 }

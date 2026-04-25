@@ -1,6 +1,15 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const getApiKey = () => {
+  try {
+    // In some environments process might be defined, in others import.meta.env
+    return (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : null) || "";
+  } catch {
+    return "";
+  }
+};
+
+const ai = new GoogleGenerativeAI(getApiKey());
 
 export async function getColombianVibrantResponse(message: string, context: string) {
   try {

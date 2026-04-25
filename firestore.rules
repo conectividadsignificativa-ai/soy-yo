@@ -18,9 +18,11 @@ service cloud.firestore {
 
     match /submissions/{submissionId} {
       allow create: if isSignedIn() && isValidId(submissionId) && isValidSubmission(incoming());
-      // Allow read for everyone to see stats, but sensitive data protection is handled by the "Split Collection" principle (PII isolation)
-      // For now, we allow list for the dashboard, but in a production app we would use a Cloud Function to aggregate or separate private data.
       allow get, list: if isSignedIn();
+    }
+
+    match /profiles/{userId} {
+      allow get, create, update: if isSignedIn() && request.auth.uid == userId;
     }
 
     function isValidSubmission(data) {
