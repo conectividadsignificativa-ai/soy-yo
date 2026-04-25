@@ -111,8 +111,8 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
     const text = val || inputValue;
     if (!text.trim()) return;
 
-    // Add user message to UI
-    setMessages(prev => [...prev, { id: Date.now().toString(), text, sender: 'user', timestamp: new Date() }]);
+    const messageId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    setMessages(prev => [...prev, { id: messageId, text, sender: 'user', timestamp: new Date() }]);
     setInputValue('');
 
     // If waiting for confirmation
@@ -121,9 +121,9 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
         const firstIdx = getNextApplicableQuestionIndex(0, {});
         setCurrentQuestionIndex(firstIdx);
         const q = QUESTIONS[firstIdx];
-        setMessages(prev => [...prev, { id: Date.now().toString(), text: q.text, sender: 'bot', timestamp: new Date() }]);
+        setMessages(prev => [...prev, { id: `bot-${Date.now()}`, text: q.text, sender: 'bot', timestamp: new Date() }]);
       } else {
-        setMessages(prev => [...prev, { id: Date.now().toString(), text: "¿Listo/a para comenzar? Avísame cuando quieras arrancar.", sender: 'bot', timestamp: new Date() }]);
+        setMessages(prev => [...prev, { id: `bot-retry-${Date.now()}`, text: "¿Listo/a para comenzar? Avísame cuando quieras arrancar.", sender: 'bot', timestamp: new Date() }]);
       }
       return;
     }
@@ -185,11 +185,29 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
 
       const vibeResponse = await getColombianVibrantResponse(prompt, `Sección actual: ${currentQuestion.section}. Preguntas totales: ${QUESTIONS.length}`);
       
-      setMessages(prev => [...prev, { id: `vibe-${Date.now()}`, text: vibeResponse, sender: 'bot', timestamp: new Date() }]);
-      
       if (!isLast) {
+        const nextQ = QUESTIONS[nextIdx];
+        // Combine vibe with question to reduce bubble noise
+        const combinedText = vibeResponse 
+          ? `${vibeResponse}\n\n**${nextQ.text}**`
+          : nextQ.text;
+          
+        setMessages(prev => [...prev, { 
+          id: `bot-${nextIdx}-${Date.now()}`, 
+          text: combinedText, 
+          sender: 'bot', 
+          timestamp: new Date() 
+        }]);
         setCurrentQuestionIndex(nextIdx);
       } else {
+        if (vibeResponse) {
+          setMessages(prev => [...prev, { 
+            id: `bot-final-vibe-${Date.now()}`, 
+            text: vibeResponse, 
+            sender: 'bot', 
+            timestamp: new Date() 
+          }]);
+        }
         setCurrentQuestionIndex(QUESTIONS.length);
         handleComplete(newAnswers);
       }
@@ -198,7 +216,12 @@ Son varias preguntas pero vamos una por una, sin afán. ¿Listo/a para comenzar?
       // Fallback: manual next question
       const nextIdx = getNextApplicableQuestionIndex(currentQuestionIndex + 1, newAnswers);
       if (nextIdx < QUESTIONS.length) {
-        setMessages(prev => [...prev, { id: Date.now().toString(), text: QUESTIONS[nextIdx].text, sender: 'bot', timestamp: new Date() }]);
+        setMessages(prev => [...prev, { 
+          id: `bot-fallback-${nextIdx}-${Date.now()}`, 
+          text: QUESTIONS[nextIdx].text, 
+          sender: 'bot', 
+          timestamp: new Date() 
+        }]);
         setCurrentQuestionIndex(nextIdx);
       } else {
         setCurrentQuestionIndex(QUESTIONS.length);

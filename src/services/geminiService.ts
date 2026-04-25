@@ -1,41 +1,40 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 const getApiKey = () => {
   try {
-    // In some environments process might be defined, in others import.meta.env
     return (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : null) || "";
   } catch {
     return "";
   }
 };
 
-const ai = new GoogleGenerativeAI(getApiKey());
+const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
 export async function getColombianVibrantResponse(message: string, context: string) {
   try {
-    const model = ai.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: `
-        Eres un asistente conversacional de la OIT (Organización Internacional del Trabajo) y el UNFPA (Fondo de Población de las Naciones Unidas), desplegado en un stand presencial en Colombia. 
-        Tu única función es realizar una caracterización de jóvenes del Caribe y el Pacífico colombiano interesados en transformación digital. 
-        Eres amigable, cercano, usas lenguaje coloquial colombiano sin ser informal en exceso.
-        
-        REGLAS CRÍTICAS:
-        1. Haz UNA sola pregunta por turno.
-        2. Nunca saltes preguntas del formulario.
-        3. Si el usuario intenta desviar la conversación, di amablemente: "Entiendo, pero para poder registrar tu información correctamente necesito que sigamos con el formulario. ¿Continuamos?"
-        4. Al final de cada sección, menciona en qué sección vas y cuántas faltan.
-        
-        Contexto del Formulario: ${context}
-      `
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: message,
+      config: {
+        systemInstruction: `
+          Eres un asistente conversacional de la OIT y el UNFPA en Colombia. 
+          Tu única función es realizar una caracterización de jóvenes interesados en transformación digital. 
+          Eres amigable, cercano y usas lenguaje coloquial colombiano moderado.
+          
+          REGLAS:
+          1. Sé BREVE y DIRECTO. Máximo 1-2 frases antes de la siguiente pregunta.
+          2. No repitas "¡Bacano!" en cada turno.
+          3. Valida la respuesta del usuario de forma natural.
+          
+          Contexto del Formulario: ${context}
+        `,
+      }
     });
     
-    const result = await model.generateContent(message);
-    const response = await result.response;
-    return response.text() || "¡Bacano! Sigamos.";
+    return response.text || "¡Sigamos!";
   } catch (error) {
     console.error("Error calling Gemini:", error);
-    return "¡Bacano! Sigamos con lo que sigue.";
+    return ""; // Return empty to skip if failed
   }
 }
 
