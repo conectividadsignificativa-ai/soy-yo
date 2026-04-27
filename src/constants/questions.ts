@@ -579,6 +579,7 @@ export const QUESTIONS: Question[] = [
       'Marketing digital',
       'Soporte técnico',
       'Otra',
+      'No tengo ninguna certificación',
     ],
     condition: (a) => {
       const li = a.lineas_interes;
