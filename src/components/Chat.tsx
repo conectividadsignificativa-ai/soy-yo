@@ -100,21 +100,7 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
     while (nextIndex < QUESTIONS.length) {
       const q = QUESTIONS[nextIndex];
       // Note: we check the condition using the variables stored in currentAnswers
-      const normalizedAnswers = {
-  ...currentAnswers,
-  grupos: typeof currentAnswers.grupos === 'string'
-    ? currentAnswers.grupos.split(', ').map(s => s.trim())
-    : currentAnswers.grupos,
-  lineas_interes: typeof currentAnswers.lineas_interes === 'string'
-    ? currentAnswers.lineas_interes.split(', ').map(s => s.trim())
-    : currentAnswers.lineas_interes,
-  situaciones_riesgo: typeof currentAnswers.situaciones_riesgo === 'string'
-    ? currentAnswers.situaciones_riesgo.split(', ').map(s => s.trim())
-    : currentAnswers.situaciones_riesgo,
-};
-
-if (!q.condition || q.condition(normalizedAnswers)) {
-{
+      if (!q.condition || q.condition(currentAnswers)) {
         return nextIndex;
       }
       nextIndex++;
