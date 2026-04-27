@@ -88,7 +88,7 @@ export const QUESTIONS: Question[] = [
     variable: 'genero',
     text: '¿Cómo te identificas?',
     type: 'select',
-    options: ['mujer', 'hombre', 'otro', 'nopref'],
+    options: ['mujer', 'hombre', 'otro', 'Prefiero no decirlo','Persona no binaria','Otro' ],
   },
   {
     id: 'p8a',
@@ -106,12 +106,15 @@ export const QUESTIONS: Question[] = [
       '¿Perteneces a alguno de los siguientes grupos o comunidades? (Marca los que apliquen)',
     type: 'multi-select',
     options: [
-      'persona_con_discapacidad',
-      'comunidad_etnica',
-      'poblacion_rural',
-      'migrante',
-      'victima_conflicto',
-      'ninguno',
+      'Comunidad indígena',
+      'Población afrodescendiente, raizal o palenquera',
+      'persona con discapacidad',
+      'Persona LGBTIQ+',
+      'Persona con discapacidad',
+      'Persona migrante o en situación de movilidad',
+      'victima del conflicto armado',
+      'Joven cuidador/a',
+      'Ninguna de las anteriores'
     ],
   },
   {
@@ -121,11 +124,11 @@ export const QUESTIONS: Question[] = [
     text:
       'Si marcaste “persona con discapacidad”, ¿cuál es el tipo de discapacidad?',
     type: 'multi-select',
-    options: ['visual', 'auditiva', 'motora', 'cognitiva', 'psicosocial'],
+    options: ['visual', 'auditiva', 'motora', 'cognitiva', 'psicosocial','Múltiple', 'Prefiero no especificar'],
     condition: (a) =>
   Array.isArray(a.grupos)
-    ? a.grupos.includes('persona_con_discapacidad')
-    : a.grupos === 'persona_con_discapacidad'
+    ? a.grupos.includes('persona con discapacidad')
+    : a.grupos === 'persona con discapacidad'
   },
   {
     id: 'p10',
@@ -133,7 +136,7 @@ export const QUESTIONS: Question[] = [
     variable: 'rango_edad',
     text: '¿En qué rango de edad estás?',
     type: 'select',
-    options: ['12_14', '15_17', '18_21', '22_25', '26_28'],
+    options: ['12-14', '15-17', '18-21', '22-25', '26-28','mayor de 28'],
   },
 
 // ======================================================
@@ -149,7 +152,7 @@ export const QUESTIONS: Question[] = [
     options: [
       'estudio',
       'trabajo',
-      'redes_sociales',
+      'redes sociales',
       'entretenimiento',
       'tramites',
       'informacion',
@@ -173,9 +176,9 @@ export const QUESTIONS: Question[] = [
     options: [
       'estudiar',
       'trabajar',
-      'acceder_servicios',
+      'acceder a servicios',
       'comunicarse',
-      'generar_ingresos',
+      'generar ingresos',
     ],
     condition: (a) => a.dejo_algo === 'si',
   },
@@ -185,7 +188,7 @@ export const QUESTIONS: Question[] = [
     variable: 'horas_internet',
     text: '¿Cuántas horas al día usas internet?',
     type: 'select',
-    options: ['1_2', '3_4', '5_6', 'mas6'],
+    options: ['1 - 2', '3 - 4', '5 - 6', 'mas de 6'],
   },
   {
     id: 'p14',
@@ -193,20 +196,24 @@ export const QUESTIONS: Question[] = [
     variable: 'seguridad_percibida',
     text: '¿Te sientes capaz de usar internet de forma segura?',
     type: 'select',
-    options: ['baja', 'media', 'alta'],
+    options: ['1.	Nada capaz', '2.	Poco capaz', '3.	Medianamente capaz','4.	capaz', '5.	Totalmente capaz'  ],
   },
   {
     id: 'p15',
     section: 'Uso de internet',
     variable: 'motivacion_internet',
     text: '¿Cuál es tu principal motivación para conectarte a internet?',
-    type: 'select',
+    type: 'multi-select',
     options: [
-      'educacion',
-      'trabajo',
-      'ingresos',
-      'comunicacion',
-      'entretenimiento',
+      'Mantenerme en contacto con personas',
+      'Entretenimiento',
+      'Estudiar o aprender',
+      'Trabajar o generar ingresos',
+      'Informarme',
+      'Expresarme o crear contenido',
+      'Reducir el estrés o distraerme',
+      'Conocer nuevas personas',
+      'Participar en temas sociales o políticos',
     ],
   },
   {
@@ -215,21 +222,39 @@ export const QUESTIONS: Question[] = [
     variable: 'importancia_internet',
     text: '¿Qué tan importante es internet en tu vida diaria?',
     type: 'select',
-    options: ['baja', 'media', 'alta'],
+    options: ['1.	Nada importante', '2.	Poco importante', '3.	Moderadamente importante','4.	Importante', 5.	Muy importante],
   },
-  {
+   {
     id: 'p17',
     section: 'Uso de internet',
     variable: 'quisiera_hacer',
     text: '¿Qué te gustaría hacer en internet que hoy no puedes?',
-    type: 'text',
+    type: 'multi-select',
+    options: [
+      'Estudiar o acceder a cursos',
+      'Conseguir trabajo o generar ingresos',
+      'Crear contenido o emprender',
+      'Acceder a servicios (salud, trámites, etc.)',
+      'Participar en comunidades o proyectos',
+      'Jugar o consumir contenido sin limitaciones',
+      'Otro',
+    ],
   },
   {
     id: 'p18',
     section: 'Uso de internet',
     variable: 'desmotivacion',
-    text: '¿Qué te desmotiva a conectarte a internet?',
-    type: 'text',
+    text: '¿¿Qué te desmotiva a conectarte a internet?',
+    type: 'multi-select',
+    options: [
+      'Alto costo',
+      'Mala conexión',
+      'Falta de tiempo',
+      'No saber usarlo bien',
+      'Falta de interés',
+      'No tener dispositivo',
+      'Otro',
+    ],
   },
   {
     id: 'p19',
@@ -245,15 +270,23 @@ export const QUESTIONS: Question[] = [
 // SECCIÓN III – HABILIDADES DIGITALES Y IA (P20–P25a)
 // ======================================================
 
-  {
+ {
     id: 'p20',
     section: 'Habilidades digitales',
     variable: 'nivel_actividades',
-    text:
-      '¿Qué tan capaz te sientes de realizar actividades digitales básicas?',
-    type: 'select',
-    options: ['bajo', 'medio', 'alto'],
+    text: '¿Cuáles de las siguientes habilidades te consideras en capacidad de hacer?  (Selecciona solo las que cuentes con capacidad)',
+    type: 'multi-select',
+    options: [
+      'Buscar información y verificar si es confiable',
+      'Usar herramientas para estudiar o trabajar',
+      'Proteger tu información personal',
+      'Identificar riesgos o fraudes',
+      'Resolver problemas técnicos básicos',
+      'Comunicarte en entornos digitales',
+    ],
   },
+  {
+,
   {
     id: 'p21',
     section: 'Habilidades digitales',
@@ -269,10 +302,10 @@ export const QUESTIONS: Question[] = [
     text: 'Cuando tienes un problema digital, ¿qué haces?',
     type: 'select',
     options: [
-      'busco_en_internet',
-      'pido_ayuda',
-      'no_se_que_hacer',
-      'curso_o_tutorial',
+      'Lo soluciono por mi cuenta',
+      'Busco ayuda en internet',
+      'Le pregunto a alguien',
+      'No sé cómo solucionarlo',
     ],
   },
   {
@@ -282,7 +315,7 @@ export const QUESTIONS: Question[] = [
     text:
       '¿Dónde has aprendido lo que sabes sobre tecnología e internet?',
     type: 'multi-select',
-    options: ['escuela', 'cursos', 'trabajo', 'autodidacta', 'amigos_familia'],
+    options: ['Colegio o universidad', 'Cursos virtuales', 'Redes sociales o internet', 'Amigos o familiares', 'De forma autodidacta', 'No he tenido formación'],
   },
   {
     id: 'p24',
@@ -307,7 +340,15 @@ export const QUESTIONS: Question[] = [
     section: 'Habilidades digitales',
     variable: 'uso_ia_para',
     text: 'Si respondiste sí, ¿para qué las has usado?',
-    type: 'text',
+    type: 'multi-select',
+    options: [
+      'Estudiar o hacer tareas',
+      'Crear contenidos',
+      'Resolver dudas',
+      'Trabajo o emprendimiento',
+      'Apoyo emocional o bienestar',
+      'Otro',
+    ],
     condition: (a) => a.uso_ia === 'si',
   },
 
@@ -321,7 +362,7 @@ export const QUESTIONS: Question[] = [
     variable: 'forma_conexion',
     text: '¿Cómo te conectas principalmente a internet?',
     type: 'multi-select',
-    options: ['datos', 'wifi_casa', 'wifi_publico', 'centro_digital'],
+    options: ['datos', 'wifi casa', 'wifi publico', 'centro digital comunitario', 'No tengo acceso'],
   },
   {
     id: 'p27',
@@ -329,7 +370,7 @@ export const QUESTIONS: Question[] = [
     variable: 'dispositivo_principal',
     text: '¿Qué dispositivo usas principalmente?',
     type: 'select',
-    options: ['celular', 'computador', 'tablet'],
+    options: ['Celular propio', 'Celular compartido', 'Computador propio', 'Computador compartido', 'Computador público', 'Otro'],
   },
   {
     id: 'p28',
@@ -337,7 +378,7 @@ export const QUESTIONS: Question[] = [
     variable: 'acceso_diario',
     text: '¿Tienes acceso a internet todos los días?',
     type: 'select',
-    options: ['si', 'no', 'a_veces'],
+    options: ['si', 'no', 'a veces'],
   },
   {
     id: 'p29',
@@ -345,7 +386,7 @@ export const QUESTIONS: Question[] = [
     variable: 'costo_internet',
     text: '¿Qué tan costoso es para ti tener internet?',
     type: 'select',
-    options: ['bajo', 'medio', 'alto'],
+    options: ['barato', 'mas o menos costoso', 'Muy costoso'],
   },
   {
     id: 'p30',
@@ -354,11 +395,10 @@ export const QUESTIONS: Question[] = [
     text: '¿Qué barreras enfrentas para conectarte a internet?',
     type: 'multi-select',
     options: [
-      'costo',
-      'cobertura',
-      'calidad',
-      'dispositivos',
-      'tiempo',
+      'Mala señal o conexión inestable',
+      'Falta de dinero',
+      'No tengo dispositivo o Debo compartir el dispositivo',
+      'Falta de energía eléctrica',
       'otro',
     ],
   },
@@ -370,10 +410,10 @@ export const QUESTIONS: Question[] = [
       '¿Has experimentado alguna de estas situaciones en internet?',
     type: 'multi-select',
     options: [
-      'fraude',
-      'acoso',
-      'estafa',
-      'robo_informacion',
+      'Acoso o insultos',
+      'Suplantación de identidad',
+      'Difusión de información personal',
+      'Discriminación',
       'ninguna',
     ],
   },
@@ -383,7 +423,7 @@ export const QUESTIONS: Question[] = [
     variable: 'sensacion_seguridad',
     text: '¿Qué tan segura/o te sientes usando internet?',
     type: 'select',
-    options: ['baja', 'media', 'alta'],
+    options: ['1.	Muy inseguro/a', '2.	Inseguro/a', '3.	Neutral','4.	Seguro/a','5.	Muy seguro/a'],
   },
   {
     id: 'p33',
@@ -397,12 +437,20 @@ export const QUESTIONS: Question[] = [
       Array.isArray(a.situaciones_riesgo) &&
       !a.situaciones_riesgo.includes('ninguna'),
   },
-  {
+   {
     id: 'p33a',
     section: 'Riesgos digitales',
     variable: 'por_que_no',
     text: 'Si no buscaste ayuda, ¿por qué?',
-    type: 'text',
+    type: 'multi-select',
+    options: [
+      'No sé cómo hacerlo',
+      'No confío en las instituciones',
+      'No lo consideré grave',
+      'Miedo a las consecuencias',
+      'Vergüenza',
+      'Otro',
+    ],
     condition: (a) => a.busco_ayuda === 'no',
   },
   {
@@ -430,7 +478,7 @@ export const QUESTIONS: Question[] = [
     text:
       '¿Qué tan probable es que aceptes solicitudes o mensajes de personas desconocidas?',
     type: 'select',
-    options: ['baja', 'media', 'alta'],
+    options: ['Nunca lo aceptaría', 'Casi nunca lo acepto', 'Depende de la situación', 'Es probable que lo acepte', 'Lo acepto sin problema'],
   },
   {
     id: 'p37',
@@ -453,12 +501,12 @@ export const QUESTIONS: Question[] = [
     text: '¿Cuál es tu nivel de estudios?',
     type: 'select',
     options: [
-      'primaria',
-      'secundaria',
-      'tecnico',
-      'tecnologo',
-      'universitario',
-      'ninguno',
+      'Primaria',
+      'Secundaria / media sin finalizar',
+      'Secundaria / media finalizada',
+      'Técnico / Tecnológico',
+      'Universitario',
+      'Postgrado',
     ],
   },
   {
@@ -469,22 +517,15 @@ export const QUESTIONS: Question[] = [
       '¿Cuál de estas opciones describe mejor tu situación actual?',
     type: 'select',
     options: [
-      'estudio',
-      'trabajo',
-      'busco_trabajo',
-      'emprendimiento',
-      'otro',
+      'Estoy estudiando',
+      'Estoy estudiando y trabajando',
+      'Estoy buscando empleo',
+      'Estoy trabajando',
+      'Tengo un emprendimiento propio',
+      'Ni estudio ni trabajo',
     ],
   },
-  {
-    id: 'p40',
-    section: 'Educación y situación actual',
-    variable: 'formacion_digital',
-    text:
-      '¿Has tomado algún curso o formación en temas digitales?',
-    type: 'select',
-    options: ['si', 'no'],
-  },
+
   {
     id: 'p41',
     section: 'Educación y situación actual',
@@ -492,16 +533,16 @@ export const QUESTIONS: Question[] = [
     text:
       '¿Te gustaría trabajar en áreas relacionadas con tecnología o entornos digitales?',
     type: 'select',
-    options: ['si', 'no'],
+    options: ['Sí, estoy buscando algo en ese sector', 'Me interesa, pero no he explorado opciones aún'],
   },
   {
     id: 'p42',
     section: 'Intereses',
     variable: 'lineas_interes',
     text:
-      '¿En cuál(es) de estas líneas te gustaría participar o aportar?',
+      '¿En cuál(es) de estas líneas te gustaría participar o aportar? (Puedes marcar más de una)*',
     type: 'multi-select',
-    options: ['empleabilidad', 'emprendimiento', 'politica_digital'],
+    options: ['Empleabilidad digital — formación, habilidades y acceso a oportunidades laborales', 'Emprendimiento digital — ideas, soluciones y negocios con tecnología', 'Participación en política pública digital — derechos digitales, incidencia y gobernanza local'],
   },
   {
     id: 'p43',
@@ -511,15 +552,21 @@ export const QUESTIONS: Question[] = [
       '¿En cuál de las siguientes áreas tienes certificación de estudios (tecnológicos, técnicos o superiores)?',
     type: 'multi-select',
     options: [
-      'software',
-      'datos',
-      'marketing_digital',
-      'redes',
-      'soporte_tecnico',
+      'Ciberseguridad',
+      'Internet de las Cosas (IoT)',
+      'Desarrollo de apps',
+      'Desarrollo en la nube (cloud)',
+      'Análisis de datos / Data science',
+      'Sistemas teleinformáticos (redes, telecomunicaciones)',
+      'Inteligencia Artificial',
+      'Diseño UX/UI',
+      'Marketing digital',
+      'Soporte técnico',
+      'Otra',
     ],
     condition: (a) =>
       Array.isArray(a.lineas_interes) &&
-      a.lineas_interes.includes('empleabilidad'),
+      a.lineas_interes.includes('Empleabilidad digital — formación, habilidades y acceso a oportunidades laborales'),
   },
   {
     id: 'p44',
@@ -531,7 +578,7 @@ export const QUESTIONS: Question[] = [
     options: ['si', 'no'],
     condition: (a) =>
       Array.isArray(a.lineas_interes) &&
-      a.lineas_interes.includes('emprendimiento'),
+      a.lineas_interes.includes('Emprendimiento digital — ideas, soluciones y negocios con tecnología'),
   },
   {
     id: 'p45',
@@ -541,12 +588,24 @@ export const QUESTIONS: Question[] = [
     type: 'text',
     condition: (a) => a.tiene_emprendimiento === 'si',
   },
-  {
-    id: 'p46',
+   {
+id: 'p46',
     section: 'Emprendimiento digital',
     variable: 'tema_emprendimiento',
     text: '¿Qué tema aborda principalmente tu iniciativa?',
-    type: 'text',
+    type: 'multi-select',
+    options: [
+      'Educación',
+      'Salud',
+      'Medio ambiente / sostenibilidad',
+      'Comercio / economía local',
+      'Cultura y arte',
+      'Seguridad y convivencia',
+      'Género e inclusión',
+      'Gobierno y trámites ciudadanos',
+      'Conectividad e infraestructura digital',
+      'Otro',
+    ],
     condition: (a) => a.tiene_emprendimiento === 'si',
   },
   {
@@ -555,7 +614,16 @@ export const QUESTIONS: Question[] = [
     variable: 'etapa_emprendimiento',
     text: '¿En qué etapa está tu iniciativa?',
     type: 'select',
-    options: ['idea', 'inicio', 'crecimiento'],
+    options: ['Es solo una idea', 'Está en diseño o prototipo', 'Ya tiene usuarios o clientes activos'],
+    condition: (a) => a.tiene_emprendimiento === 'si',
+  },
+   {
+    id: 'p47a',
+    section: 'Emprendimiento digital',
+    variable: 'alcance_emprendimiento',
+    text: '¿Tu iniciativa está enfocada en…?',
+    type: 'select',
+    options: ['Tu comunidad local', 'En tu región', 'Cuenta con alcance nacional'],
     condition: (a) => a.tiene_emprendimiento === 'si',
   },
   {
@@ -566,11 +634,11 @@ export const QUESTIONS: Question[] = [
       '¿Qué barreras has enfrentado para desarrollar tu emprendimiento digital?',
     type: 'multi-select',
     options: [
-      'capital',
-      'conocimiento',
-      'mercado',
-      'tecnologia',
-      'tiempo',
+      'Falta de conexión ',
+      'Falta de formación',
+      'Falta de recursos económicos ',
+      'Poco apoyo institucional',
+      'Otro',
     ],
     condition: (a) => a.tiene_emprendimiento === 'si',
   },
@@ -588,7 +656,7 @@ export const QUESTIONS: Question[] = [
     section: 'Emprendimiento digital',
     variable: 'enlaces_emprendimiento',
     text:
-      '¿Tienes enlaces o redes sociales donde podamos conocer más?',
+      '¿Tienes links, hashtags o redes sociales donde podamos conocer más?',
     type: 'text',
     condition: (a) => a.tiene_emprendimiento === 'si',
   },
@@ -602,7 +670,7 @@ export const QUESTIONS: Question[] = [
     options: ['si', 'no'],
     condition: (a) =>
       Array.isArray(a.lineas_interes) &&
-      a.lineas_interes.includes('politica_digital'),
+      a.lineas_interes.includes('Participación en política pública digital — derechos digitales, incidencia y gobernanza local'),
   },
   {
     id: 'p52',
@@ -614,7 +682,7 @@ export const QUESTIONS: Question[] = [
     options: ['si', 'no'],
     condition: (a) =>
       Array.isArray(a.lineas_interes) &&
-      a.lineas_interes.includes('politica_digital'),
+      a.lineas_interes.includes('Participación en política pública digital — derechos digitales, incidencia y gobernanza local'),
   },
   {
     id: 'p53',
@@ -632,25 +700,40 @@ export const QUESTIONS: Question[] = [
       '¿Qué temas te interesan más dentro de la política pública digital?',
     type: 'multi-select',
     options: [
-      'educacion_digital',
-      'empleo_digital',
-      'datos',
-      'conectividad',
-      'inclusion',
+      'Derechos digitales',
+      'Protección de datos personales',
+      'Alfabetización y educación digital',
+      'Participación en decisiones tecnológicas',
+      'Empleo y trabajo en la economía digital / comercio electrónico',
+      'Regulación de plataformas digitales',
+      'Inteligencia artificial y sus impactos',
+      'Otro',
     ],
     condition: (a) =>
       Array.isArray(a.lineas_interes) &&
-      a.lineas_interes.includes('politica_digital'),
+      a.lineas_interes.includes('Participación en política pública digital — derechos digitales, incidencia y gobernanza local'),
   },
   {
-    id: 'p55',
+ id: 'p55',
     section: 'Política pública digital',
     variable: 'forma_participar',
     text:
       '¿Cómo te gustaría participar o contribuir en temas de política digital?',
-    type: 'text',
+    type: 'multi-select',
+    options: [
+      'Participando en espacios de consulta o diálogo con el gobierno',
+      'Haciendo veeduría o seguimiento a políticas digitales',
+      'Creando contenido para informar a mi comunidad sobre temas digitales',
+      'Representando a jóvenes de mi territorio en espacios de toma de decisión',
+      'Formulando propuestas o iniciativas de política pública',
+      'Investigando y documentando problemáticas digitales de mi región',
+      'Conectando a otros jóvenes con oportunidades y espacios digitales',
+      'Aprendiendo más sobre el tema antes de participar activamente',
+      'Otro',
+    ],
     condition: (a) =>
       Array.isArray(a.lineas_interes) &&
-      a.lineas_interes.includes('politica_digital'),
-  },
+      a.lineas_interes.includes('Participación en política pública digital — derechos digitales, incidencia y gobernanza local'),  }
+
+ {,
 ];
