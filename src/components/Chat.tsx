@@ -114,7 +114,7 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
 };
 
 if (!q.condition || q.condition(normalizedAnswers)) {
-``{
+{
         return nextIndex;
       }
       nextIndex++;
