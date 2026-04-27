@@ -23,6 +23,43 @@ interface Message {
   timestamp: Date;
 }
 
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
 export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
@@ -195,10 +232,14 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
         setMessages(prev => [...prev, { id: `badge-msg-${Date.now()}`, text: badgeMsg, sender: 'bot', timestamp: new Date() }]);
 
         if (auth.currentUser) {
+          const profilePath = `profiles/${auth.currentUser.uid}`;
           updateDoc(doc(db, 'profiles', auth.currentUser.uid), {
             points: increment(pointsAwarded),
             badges: arrayUnion(badgeToAward.id)
-          }).catch(console.error);
+          }).catch(err => {
+            console.error("Profile update error", err);
+            // Non-blocking but logged
+          });
         }
       } else {
         // Base points per question
@@ -209,7 +250,9 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
         if (auth.currentUser) {
           updateDoc(doc(db, 'profiles', auth.currentUser.uid), {
             points: increment(basePoints)
-          }).catch(console.error);
+          }).catch(err => {
+            console.error("Profile update error", err);
+          });
         }
       }
 
@@ -281,16 +324,32 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
 
   const handleComplete = async (finalAnswers: Record<string, any>) => {
     setIsTyping(true);
+    const path = 'submissions';
     try {
+      if (!auth.currentUser) {
+        throw new Error("User not authenticated. Please wait for sign-in to complete.");
+      }
+
       const submissionId = typeof crypto.randomUUID === 'function' 
         ? crypto.randomUUID() 
         : Math.random().toString(36).substring(2) + Date.now().toString(36);
         
-      await setDoc(doc(db, 'submissions', submissionId), {
+      const payload: any = {
         ...finalAnswers,
         createdAt: serverTimestamp(),
-        userId: auth.currentUser?.uid
-      });
+        userId: auth.currentUser.uid
+      };
+
+      // Ensure required fields for rules are present
+      if (!payload.nombre || !payload.email) {
+        console.warn("Payload missing required fields for Firestore rules", payload);
+      }
+
+      try {
+        await setDoc(doc(db, path, submissionId), payload);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.WRITE, `${path}/${submissionId}`);
+      }
       
       // Build summary
       let summaryText = "✅ ¡Listo! Tu participación es muy importante para fortalecer iniciativas de transformación digital. Aquí está el resumen de lo que registré:\n\n";
@@ -312,8 +371,9 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
       setMessages(prev => [...prev, { id: 'end', text: summaryText, sender: 'bot', timestamp: new Date() }]);
       setIsComplete(true);
     } catch (err) {
-      console.error(err);
-      setError("Huy, tuvimos un pequeño problema al guardar tus datos. ¿Podrías intentarlo de nuevo?");
+      console.error("Critical submission error:", err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(`Huy, tuvimos un pequeño problema al guardar tus datos. Error: ${errorMessage}`);
     }
     setIsTyping(false);
   };

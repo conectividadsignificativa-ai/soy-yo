@@ -135,10 +135,11 @@ export const QUESTIONS: Question[] = [
       'Si marcaste “Persona con discapacidad”, ¿cuál es el tipo de discapacidad?',
     type: 'multi-select',
     options: ['visual', 'auditiva', 'motora', 'cognitiva', 'psicosocial','Múltiple', 'Prefiero no especificar'],
-    condition: (a) =>
-  Array.isArray(a.grupos)
-    ? a.grupos.includes('Persona con discapacidad')
-    : a.grupos === 'Persona con discapacidad'
+    condition: (a) => {
+      const g = a.grupos;
+      const list = Array.isArray(g) ? g : (typeof g === 'string' ? g.split(', ') : []);
+      return list.includes('Persona con discapacidad');
+    }
   },
   {
     id: 'p10',
@@ -442,9 +443,11 @@ export const QUESTIONS: Question[] = [
       'Si viviste una situación negativa, ¿buscaste ayuda o denunciaste?',
     type: 'select',
     options: ['si', 'no'],
-    condition: (a) =>
-      Array.isArray(a.situaciones_riesgo) &&
-      !a.situaciones_riesgo.includes('ninguna'),
+    condition: (a) => {
+      const s = a.situaciones_riesgo;
+      const list = Array.isArray(s) ? s : (typeof s === 'string' ? s.split(', ') : []);
+      return list.length > 0 && !list.includes('ninguna');
+    },
   },
    {
     id: 'p33a',
@@ -577,9 +580,11 @@ export const QUESTIONS: Question[] = [
       'Soporte técnico',
       'Otra',
     ],
-    condition: (a) =>
-      Array.isArray(a.lineas_interes) &&
-      a.lineas_interes.includes('Empleabilidad digital — formación, habilidades y acceso a oportunidades laborales'),
+    condition: (a) => {
+      const li = a.lineas_interes;
+      const list = Array.isArray(li) ? li : (typeof li === 'string' ? li.split(', ') : []);
+      return list.includes('Empleabilidad digital — formación, habilidades y acceso a oportunidades laborales');
+    },
   },
   {
     id: 'p44',
@@ -589,9 +594,11 @@ export const QUESTIONS: Question[] = [
       '¿Tienes o estás desarrollando un emprendimiento digital?',
     type: 'select',
     options: ['si', 'no'],
-    condition: (a) =>
-      Array.isArray(a.lineas_interes) &&
-      a.lineas_interes.includes('Emprendimiento digital — ideas, soluciones y negocios con tecnología'),
+    condition: (a) => {
+      const li = a.lineas_interes;
+      const list = Array.isArray(li) ? li : (typeof li === 'string' ? li.split(', ') : []);
+      return list.includes('Emprendimiento digital — ideas, soluciones y negocios con tecnología');
+    },
   },
   {
     id: 'p45',
@@ -681,9 +688,11 @@ export const QUESTIONS: Question[] = [
       '¿Has participado antes en espacios de participación ciudadana, juvenil o digital?',
     type: 'select',
     options: ['si', 'no'],
-    condition: (a) =>
-      Array.isArray(a.lineas_interes) &&
-      a.lineas_interes.includes('Participación en política pública digital — derechos digitales, incidencia y gobernanza local'),
+    condition: (a) => {
+      const li = a.lineas_interes;
+      const list = Array.isArray(li) ? li : (typeof li === 'string' ? li.split(', ') : []);
+      return list.includes('Participación en política pública digital — derechos digitales, incidencia y gobernanza local');
+    },
   },
   {
     id: 'p52',
@@ -693,9 +702,11 @@ export const QUESTIONS: Question[] = [
       '¿Perteneces a alguna red, colectivo u organización juvenil?',
     type: 'select',
     options: ['si', 'no'],
-    condition: (a) =>
-      Array.isArray(a.lineas_interes) &&
-      a.lineas_interes.includes('Participación en política pública digital — derechos digitales, incidencia y gobernanza local'),
+    condition: (a) => {
+      const li = a.lineas_interes;
+      const list = Array.isArray(li) ? li : (typeof li === 'string' ? li.split(', ') : []);
+      return list.includes('Participación en política pública digital — derechos digitales, incidencia y gobernanza local');
+    },
   },
   {
     id: 'p53',
@@ -714,17 +725,14 @@ export const QUESTIONS: Question[] = [
     type: 'multi-select',
     options: [
       'Derechos digitales',
-      'Protección de datos personales',
-      'Alfabetización y educación digital',
-      'Participación en decisiones tecnológicas',
-      'Empleo y trabajo en la economía digital / comercio electrónico',
-      'Regulación de plataformas digitales',
-      'Inteligencia artificial y sus impactos',
+...
       'Otro',
     ],
-    condition: (a) =>
-      Array.isArray(a.lineas_interes) &&
-      a.lineas_interes.includes('Participación en política pública digital — derechos digitales, incidencia y gobernanza local'),
+    condition: (a) => {
+      const li = a.lineas_interes;
+      const list = Array.isArray(li) ? li : (typeof li === 'string' ? li.split(', ') : []);
+      return list.includes('Participación en política pública digital — derechos digitales, incidencia y gobernanza local');
+    },
   },
   {
     id: 'p55',
@@ -735,17 +743,13 @@ export const QUESTIONS: Question[] = [
     type: 'multi-select',
     options: [
       'Participando en espacios de consulta o diálogo con el gobierno',
-      'Haciendo veeduría o seguimiento a políticas digitales',
-      'Creando contenido para informar a mi comunidad sobre temas digitales',
-      'Representando a jóvenes de mi territorio en espacios de toma de decisión',
-      'Formulando propuestas o iniciativas de política pública',
-      'Investigando y documentando problemáticas digitales de mi región',
-      'Conectando a otros jóvenes con oportunidades y espacios digitales',
-      'Aprendiendo más sobre el tema antes de participar activamente',
+...
       'Otro',
     ],
-    condition: (a) =>
-      Array.isArray(a.lineas_interes) &&
-      a.lineas_interes.includes('Participación en política pública digital — derechos digitales, incidencia y gobernanza local'),
+    condition: (a) => {
+      const li = a.lineas_interes;
+      const list = Array.isArray(li) ? li : (typeof li === 'string' ? li.split(', ') : []);
+      return list.includes('Participación en política pública digital — derechos digitales, incidencia y gobernanza local');
+    },
   }
 ];
