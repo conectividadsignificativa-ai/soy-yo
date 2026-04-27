@@ -286,8 +286,6 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-,
-  {
     id: 'p21',
     section: 'Habilidades digitales',
     variable: 'nivel_habilidades',
