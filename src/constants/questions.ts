@@ -246,7 +246,7 @@ export const QUESTIONS: Question[] = [
       'Estudiar o acceder a cursos',
       'Conseguir trabajo o generar ingresos',
       'Crear contenido o emprender',
-      'Acceder a servicios (salud, trámites, etc.)',
+      'Acceder a servicios (salud, gobierno, etc.)',
       'Participar en comunidades o proyectos',
       'Jugar o consumir contenido sin limitaciones',
       'Otro',
@@ -545,7 +545,7 @@ export const QUESTIONS: Question[] = [
     text:
       '¿Te gustaría trabajar en áreas relacionadas con tecnología o entornos digitales?',
     type: 'select',
-    options: ['Sí, estoy buscando algo en ese sector', 'Me interesa, pero no he explorado opciones aún', 'Ya tengo experiencia en temas digitales'],
+    options: ['Sí, estoy buscando algo en ese sector', 'Me interesa, pero no he explorado opciones aún', 'Ya tengo experiencia en temas digitales', 'No me interesa los temas digitales o de tecnología'],
   },
   {
     id: 'p42',

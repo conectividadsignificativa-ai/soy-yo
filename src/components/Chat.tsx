@@ -145,12 +145,21 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
     return nextIndex;
   };
 
-  const handleSend = async (val?: string) => {
+  const handleSend = async (val?: string | string[]) => {
     const text = val || inputValue;
-    if (!text.trim()) return;
+    const isArray = Array.isArray(text);
+    
+    if (isArray) {
+      if (text.length === 0) return;
+    } else if (typeof text === 'string') {
+      if (!text.trim()) return;
+    } else if (text === undefined || text === null) {
+      return;
+    }
 
     const messageId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    setMessages(prev => [...prev, { id: messageId, text, sender: 'user', timestamp: new Date() }]);
+    const displayValue = isArray ? (text as string[]).join(', ') : (text as string);
+    setMessages(prev => [...prev, { id: messageId, text: displayValue, sender: 'user', timestamp: new Date() }]);
     setInputValue('');
 
     // If waiting for confirmation
@@ -165,7 +174,7 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
     const currentQuestion = QUESTIONS[currentQuestionIndex];
     
     // Validate email if it's p3
-    if (currentQuestion.variable === 'email') {
+    if (currentQuestion.variable === 'email' && typeof text === 'string') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(text)) {
         setMessages(prev => [...prev, { id: `err-${Date.now()}`, text: "Por favor, ingresa un correo electrónico válido.", sender: 'bot', timestamp: new Date() }]);
@@ -656,28 +665,20 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
 
 interface QuestionInputProps {
   question: Question;
-  value: string;
-  onChange: (val: string) => void;
-  onSend: (val?: string) => void;
+  value: any;
+  onChange: (val: any) => void;
+  onSend: (val?: string | string[]) => void;
   disabled: boolean;
 }
 
 function QuestionInput({ question, value, onChange, onSend, disabled }: QuestionInputProps) {
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-
-  // Sync internal state for multi-select
-  useEffect(() => {
-    if (question.type === 'multi-select') {
-      setSelectedOptions(value ? value.split(', ') : []);
-    }
-  }, [question, value]);
+  const selectedOptions = Array.isArray(value) ? value : (value ? value.split(', ').filter(Boolean) : []);
 
   const toggleOption = (opt: string) => {
-    const current = value ? value.split(', ').filter(Boolean) : [];
-    const newOptions = current.includes(opt)
-      ? current.filter(o => o !== opt)
-      : [...current, opt];
-    onChange(newOptions.join(', '));
+    const newOptions = selectedOptions.includes(opt)
+      ? selectedOptions.filter(o => o !== opt)
+      : [...selectedOptions, opt];
+    onChange(newOptions as any);
   };
 
   if (question.type === 'select') {
@@ -725,7 +726,7 @@ function QuestionInput({ question, value, onChange, onSend, disabled }: Question
           ))}
         </div>
         <button
-          onClick={() => onSend()}
+          onClick={() => onSend(selectedOptions)}
           disabled={disabled || selectedOptions.length === 0}
           className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-md hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
         >
