@@ -673,10 +673,10 @@ function QuestionInput({ question, value, onChange, onSend, disabled }: Question
   }, [question, value]);
 
   const toggleOption = (opt: string) => {
-    const newOptions = selectedOptions.includes(opt)
-      ? selectedOptions.filter(o => o !== opt)
-      : [...selectedOptions, opt];
-    setSelectedOptions(newOptions);
+    const current = value ? value.split(', ').filter(Boolean) : [];
+    const newOptions = current.includes(opt)
+      ? current.filter(o => o !== opt)
+      : [...current, opt];
     onChange(newOptions.join(', '));
   };
 

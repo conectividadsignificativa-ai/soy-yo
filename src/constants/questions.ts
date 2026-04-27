@@ -303,7 +303,7 @@ export const QUESTIONS: Question[] = [
     variable: 'nivel_habilidades',
     text: '¿Cómo calificarías tu nivel de habilidades digitales?',
     type: 'select',
-    options: ['bajo', 'medio', 'alto'],
+    options: ['Básico', 'Intermedio', 'Avanzado'],
   },
   {
     id: 'p22',
@@ -725,7 +725,12 @@ export const QUESTIONS: Question[] = [
     type: 'multi-select',
     options: [
       'Derechos digitales',
-...
+      'Protección de datos personales',
+      'Alfabetización y educación digital',
+      'Participación en decisiones tecnológicas',
+      'Empleo y trabajo en la economía digital / comercio electrónico',
+      'Regulación de plataformas digitales',
+      'Inteligencia artificial y sus impactos',
       'Otro',
     ],
     condition: (a) => {
@@ -743,7 +748,13 @@ export const QUESTIONS: Question[] = [
     type: 'multi-select',
     options: [
       'Participando en espacios de consulta o diálogo con el gobierno',
-...
+      'Haciendo veeduría o seguimiento a políticas digitales',
+      'Creando contenido para informar a mi comunidad sobre temas digitales',
+      'Representando a jóvenes de mi territorio en espacios de toma de decisión',
+      'Formulando propuestas o iniciativas de política pública',
+      'Investigando y documentando problemáticas digitales de mi región',
+      'Conectando a otros jóvenes con oportunidades y espacios digitales',
+      'Aprendiendo más sobre el tema antes de participar activamente',
       'Otro',
     ],
     condition: (a) => {
