@@ -7,7 +7,8 @@ import {
 } from 'recharts';
 import { 
   LayoutDashboard, Users, Globe, BookOpen, Brain, Zap, ArrowLeft, 
-  ShieldCheck, AlertTriangle, Monitor, Target, Heart, Search, HelpCircle, GraduationCap
+  ShieldCheck, AlertTriangle, Monitor, Target, Heart, Search, HelpCircle, GraduationCap,
+  Calendar
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
@@ -92,13 +93,28 @@ export default function Dashboard() {
     // Bloque 5
     const lineasInteres = getChartData('lineas_interes');
 
+    // Actividad Diaria
+    const dailyCounts: Record<string, number> = {};
+    data.forEach(item => {
+      if (item.createdAt) {
+        // Handle Firestore Timestamp or Date
+        const date = item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt.seconds * 1000);
+        const dateStr = date.toISOString().split('T')[0];
+        dailyCounts[dateStr] = (dailyCounts[dateStr] || 0) + 1;
+      }
+    });
+    const dailyActivity = Object.entries(dailyCounts)
+      .map(([date, count]) => ({ date, count }))
+      .sort((a, b) => b.date.localeCompare(a.date));
+
     return {
       total,
       ageDist, zoneDist, groupsDist,
       topUsos, dejoAlgoCount, actividadesAfectadas, horasPromedio, importanciaDist,
       nivelHabilidades, seguridadPercibida, solucionProblemas, dondeAprendio, usoIaCount, usosIaDist,
       tipoConexion, barreras, riesgosCount, sabeInfoPrivada, sabeDenunciar,
-      lineasInteres
+      lineasInteres,
+      dailyActivity
     };
   }, [data]);
 
@@ -300,6 +316,36 @@ export default function Dashboard() {
               </ResponsiveContainer>
             </div>
           </ChartCard>
+        </div>
+
+        {/* 6. ACTIVIDAD DIARIA */}
+        <SectionHeader title="BLOQUE 6: Actividad Diaria" icon={<Calendar />} />
+        <div className="grid grid-cols-1 gap-6">
+           <ChartCard title="Histórico de Encuestas por Día">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100">
+                      <th className="py-4 px-4 text-xs font-black uppercase tracking-widest text-slate-400">Fecha</th>
+                      <th className="py-4 px-4 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Cantidad de Encuestas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.dailyActivity.map((day: any) => (
+                      <tr key={day.date} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                        <td className="py-4 px-4 text-sm font-bold text-slate-700">{day.date}</td>
+                        <td className="py-4 px-4 text-sm font-black text-blue-600 text-right">{day.count}</td>
+                      </tr>
+                    ))}
+                    {stats.dailyActivity.length === 0 && (
+                      <tr>
+                        <td colSpan={2} className="py-8 text-center text-slate-400 italic text-sm">No hay actividad registrada</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+           </ChartCard>
         </div>
 
         <footer className="pt-10 text-center text-slate-400 text-sm border-t border-slate-100 flex flex-col items-center gap-4">
