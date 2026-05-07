@@ -138,15 +138,15 @@ export default function ConventionalForm() {
 
     // Award section badge if not earned
     const sectionToBadgeMap: Record<string, string> = {
-      'Información Básica': 'perfil_creado',
-      'Uso de Internet': 'explorador_digital',
-      'Habilidades Digitales': 'aprendiz_digital',
-      'Acceso y Conectividad': 'conectado',
-      'Riesgos Digitales': 'navegante_consciente',
-      'Áreas de Interés': 'rumbo_digital',
-      'Empleabilidad Digital': 'talento_digital',
-      'Emprendimiento Digital': 'constructor_ideas',
-      'Política Digital': 'voz_ciudadana'
+      'Información básica': 'perfil_creado',
+      'Uso de internet': 'explorador_digital',
+      'Habilidades digitales': 'aprendiz_digital',
+      'Acceso y conectividad': 'conectado',
+      'Riesgos digitales': 'navegante_consciente',
+      'Intereses': 'rumbo_digital',
+      'Empleabilidad digital': 'talento_digital',
+      'Emprendimiento digital': 'constructor_ideas',
+      'Política pública digital': 'voz_ciudadana'
     };
 
     const bid = sectionToBadgeMap[currentSection];
@@ -193,6 +193,7 @@ export default function ConventionalForm() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError(null);
+    const path = 'submissions';
 
     try {
       if (!auth.currentUser) throw new Error("User not authenticated.");
@@ -210,7 +211,7 @@ export default function ConventionalForm() {
 
       if (!payload.nombre || !payload.email) {
         // Fallback validation if something went wrong
-        const basicSectionIdx = sections.indexOf('Información Básica');
+        const basicSectionIdx = sections.findIndex(s => s.toLowerCase().includes('información básica'));
         if (basicSectionIdx !== -1) {
           setCurrentStepIndex(basicSectionIdx);
           setError("Por favor completa los campos obligatorios (Nombre y Email) en la sección de Información Básica.");
@@ -219,7 +220,11 @@ export default function ConventionalForm() {
         }
       }
 
-      await setDoc(doc(db, 'submissions', submissionId), payload);
+      try {
+        await setDoc(doc(db, path, submissionId), payload);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.WRITE, `${path}/${submissionId}`);
+      }
 
       // Final Badge
       if (!earnedBadges.includes('agente_transformacion')) {
@@ -231,7 +236,8 @@ export default function ConventionalForm() {
       window.scrollTo(0, 0);
     } catch (err: any) {
       console.error("Submission error:", err);
-      setError(`Huy, tuvimos un problema al guardar. Error: ${err.message}`);
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Huy, tuvimos un problema al guardar. Error: ${msg}`);
     } finally {
       setIsSubmitting(false);
     }

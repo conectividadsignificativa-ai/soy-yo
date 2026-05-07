@@ -26,11 +26,10 @@ service cloud.firestore {
     }
 
     function isValidSubmission(data) {
-      return data.keys().hasAll(['nombre', 'email', 'createdAt', 'userId'])
-        && data.nombre is string && data.nombre.size() <= 200
-        && data.email is string && data.email.size() <= 200
-        && data.createdAt == request.time
-        && data.userId == request.auth.uid
+      return (data.nombre is string && data.nombre.size() <= 500)
+        && (data.email is string && data.email.size() <= 500)
+        && (data.createdAt == request.time)
+        && (data.userId == request.auth.uid)
         ;
     }
   }
