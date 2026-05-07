@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, User, Bot, Loader2, Sparkles, AlertCircle, LayoutDashboard, Trophy, Star, Target, Award } from 'lucide-react';
+import { Send, User, Bot, Loader2, Sparkles, AlertCircle, LayoutDashboard, Trophy, Star, Target, Award, ClipboardList } from 'lucide-react';
 import { db, auth } from '../lib/firebase';
 import { signInAnonymously } from 'firebase/auth';
 import { collection, doc, setDoc, getDoc, serverTimestamp, updateDoc, increment, arrayUnion } from 'firebase/firestore';
@@ -482,6 +482,10 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
           </div>
           
           <div className="flex items-center gap-4">
+            <Link to="/form" className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-500 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all">
+                <ClipboardList className="w-4 h-4" />
+                Formulario
+            </Link>
             <div className="hidden sm:flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
               <Trophy className="w-3.5 h-3.5 text-yellow-500" />
               <span className="text-xs font-black text-slate-700">{points} pts</span>
@@ -612,15 +616,22 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
         <footer className="p-6 md:p-10 bg-white border-t border-slate-100">
           <div className="max-w-4xl mx-auto w-full shadow-2xl shadow-blue-900/5 rounded-3xl ring-1 ring-slate-100">
             {!isComplete && currentQuestionIndex === -1 && (
-              <div className="p-4 flex gap-2">
+              <div className="p-4 flex flex-col gap-4">
                 <button 
                   onClick={() => handleSend("¡Sí, listo!")}
                   disabled={isTyping}
-                  className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-3"
+                  className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-3"
                 >
                   <Sparkles className="w-5 h-5" />
                   ¡Empezar encuesta!
                 </button>
+                <Link 
+                  to="/form" 
+                  className="w-full bg-slate-50 text-slate-500 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-all flex items-center justify-center gap-2 border border-slate-100"
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  ¿Prefieres un formulario tradicional? Haz clic aquí
+                </Link>
               </div>
             )}
 
