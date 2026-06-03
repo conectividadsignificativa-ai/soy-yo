@@ -2,5 +2,7 @@
   "name": "Conectividad Significativa",
   "description": "Chatbot conversacional para la identificación y focalización de beneficiarios del proyecto Conectividad Significativa en Colombia.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

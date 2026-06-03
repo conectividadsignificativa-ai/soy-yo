@@ -316,9 +316,74 @@ export default function Dashboard() {
             </button>
 
             {authError && (
-              <p className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100 text-left whitespace-pre-wrap break-all">
-                {authError}
-              </p>
+              <div className="space-y-4">
+                <p className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100 text-left whitespace-pre-wrap break-all">
+                  {authError}
+                </p>
+
+                {authError.toLowerCase().includes('unauthorized-domain') && (
+                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-2xl text-left space-y-3">
+                    <h3 className="text-xs font-black text-blue-900 tracking-wider uppercase flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                      ¿Cómo solucionar este error?
+                    </h3>
+                    <p className="text-[11px] font-medium text-blue-700 leading-relaxed">
+                      El dominio actual de la aplicación no está autorizado en tu proyecto de Firebase. Sigue estos sencillos pasos para habilitarlo:
+                    </p>
+                    <ol className="text-[11px] font-semibold text-blue-800 list-decimal pl-4 space-y-1">
+                      <li>
+                        Abre la consola de Firebase en:{' '}
+                        <a 
+                          href="https://console.firebase.google.com/project/gen-lang-client-0263538171/authentication/settings" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="underline text-blue-600 hover:text-blue-800 font-extrabold break-all"
+                        >
+                          Configuración de Firebase Auth
+                        </a>
+                      </li>
+                      <li>
+                        Ve a la pestaña de <strong>Ajustes (Settings)</strong> y debajo busca la sección de <strong>Dominios autorizados (Authorized domains)</strong>.
+                      </li>
+                      <li>
+                        Haz clic en <strong>Añadir dominio (Add domain)</strong>.
+                      </li>
+                      <li>
+                        Agrega el dominio de desarrollo y el dominio público/compartido para que funcione en ambos entornos:
+                        <div className="mt-1.5 p-2 bg-white rounded-xl border border-blue-100 font-mono text-[9px] text-blue-900 space-y-1">
+                          <div className="flex justify-between items-center bg-blue-50/50 p-1 rounded">
+                            <span>ais-dev-xbzjmdscrgnx4a7w3qzx5i-676483839924.us-east1.run.app</span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText('ais-dev-xbzjmdscrgnx4a7w3qzx5i-676483839924.us-east1.run.app');
+                                alert('Dominio de desarrollo copiado');
+                              }}
+                              className="text-[9px] bg-blue-600 text-white px-1.5 py-0.5 rounded hover:bg-blue-700 font-sans font-bold"
+                            >
+                              Copiar
+                            </button>
+                          </div>
+                          <div className="flex justify-between items-center bg-blue-50/50 p-1 rounded">
+                            <span>ais-pre-xbzjmdscrgnx4a7w3qzx5i-676483839924.us-east1.run.app</span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText('ais-pre-xbzjmdscrgnx4a7w3qzx5i-676483839924.us-east1.run.app');
+                                alert('Dominio compartido copiado');
+                              }}
+                              className="text-[9px] bg-blue-600 text-white px-1.5 py-0.5 rounded hover:bg-blue-700 font-sans font-bold"
+                            >
+                              Copiar
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                    </ol>
+                    <p className="text-[10px] text-blue-600 italic">
+                      * Una vez agregados en Firebase, vuelve aquí y haz clic en "Acceder con Google" de nuevo y funcionará perfectamente.
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
