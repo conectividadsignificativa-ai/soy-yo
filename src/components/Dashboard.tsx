@@ -80,7 +80,8 @@ export default function Dashboard() {
       await signInWithPopup(auth, provider);
     } catch (err: any) {
       console.error("Google sign in error", err);
-      setAuthError("No se pudo iniciar sesión con Google. Inténtalo de nuevo.");
+      const detailedMessage = err?.code ? `[${err.code}] ${err.message}` : (err?.message || String(err));
+      setAuthError(`No se pudo iniciar sesión con Google (${detailedMessage}).`);
     }
   };
 
@@ -256,32 +257,56 @@ export default function Dashboard() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl border border-slate-100 max-w-md w-full text-center relative z-10 space-y-8"
+          className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-slate-100 max-w-md w-full text-center relative z-10 space-y-6"
         >
           <div className="flex justify-center flex-col items-center gap-4">
-             <div className="flex items-center gap-4 justify-center mb-2">
+             <div className="flex items-center gap-4 justify-center mb-1">
                <img 
                  src="https://drive.google.com/uc?export=view&id=174vtmcqrDB0haU8p_G9CVfWZxAn3fOvn"
                  alt="OIT & UNFPA"
-                 className="h-10 object-contain referrerPolicy"
+                 className="h-9 object-contain referrerPolicy"
                  referrerPolicy="no-referrer"
                />
              </div>
-             <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center ring-4 ring-blue-50/50">
-               <ShieldCheck className="w-8 h-8" />
+             <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-[1.25rem] flex items-center justify-center ring-4 ring-blue-50/50">
+               <ShieldCheck className="w-7 h-7" />
              </div>
-             <h2 className="text-2xl font-black text-slate-900 tracking-tight mt-2">Acceso Administrativo</h2>
-             <p className="text-sm font-semibold text-slate-500 leading-relaxed max-w-xs">
+             <h2 className="text-xl font-black text-slate-900 tracking-tight mt-1">Acceso Administrativo</h2>
+             <p className="text-xs font-semibold text-slate-500 leading-relaxed max-w-xs">
                Este panel de administración y estadísticas contiene información protegida. Inicia sesión con una cuenta de Google autorizada.
              </p>
           </div>
 
-          <div className="space-y-4">
+          {/* Iframe detection / instruction banner */}
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 text-left space-y-2">
+            <span className="text-xs font-black text-amber-800 flex items-center gap-1.5 uppercase tracking-wider">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              ¿El botón de Google no responde?
+            </span>
+            <p className="text-[11px] font-medium text-amber-700 leading-relaxed">
+              Si estás viendo esta aplicación dentro de la vista previa de <strong>AI Studio</strong>, los navegadores bloquean las ventanas emergentes (popups) de Google Login debido a reglas de seguridad de iframes. 
+            </p>
+            <p className="text-[11px] font-medium text-amber-700 leading-relaxed">
+              Haz clic en <strong>"Abrir en nueva pestaña"</strong> a continuación para autenticarte sin restricciones.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <a
+              href={window.location.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3.5 rounded-2xl transition-all shadow-md active:scale-[0.98] cursor-pointer text-sm"
+            >
+              <Monitor className="w-4 h-4" />
+              <span>Abrir en nueva pestaña</span>
+            </a>
+
             <button
               onClick={handleGoogleSignIn}
-              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-bold px-6 py-4 rounded-2xl border-2 border-slate-200 hover:border-slate-300 transition-all shadow-md active:scale-[0.98] cursor-pointer"
+              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-bold px-6 py-3.5 rounded-2xl border-2 border-slate-200 hover:border-slate-300 transition-all shadow-sm active:scale-[0.98] cursor-pointer text-sm"
             >
-              <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
                 <path
                   fill="#EA4335"
                   d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.53-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.111C18.29 1.94 15.42 1 12.24 1 5.922 1 .8 6.122.8 12.4s5.122 11.4 11.44 11.4c6.6 0 11.01-4.637 11.01-11.22 0-.755-.08-1.33-.178-1.895H12.24z"
@@ -291,7 +316,7 @@ export default function Dashboard() {
             </button>
 
             {authError && (
-              <p className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100">
+              <p className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100 text-left whitespace-pre-wrap break-all">
                 {authError}
               </p>
             )}
