@@ -20,7 +20,8 @@ const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
 
 const ALLOWED_EMAILS = [
   'conectividadsignificativa@gmail.com',
-  'nicolsg40@gmail.com'
+  'nicolsg40@gmail.com',
+  'osoriocastillox@gmail.com'
 ];
 
 export default function Dashboard() {
@@ -301,31 +302,46 @@ export default function Dashboard() {
 
               <div>
                 <h4 className="text-[11px] font-black text-amber-900 flex items-center gap-1">
-                  <span>2. ¿Aparece "The requested action is invalid"? o ¿El botón "Save" está gris?</span>
+                  <span>2. ¿El botón "Save" de Google está gris en Firebase?</span>
                 </h4>
                 <p className="text-[10px] font-semibold text-amber-700 leading-relaxed mt-0.5">
-                  Si ya configuraste tu correo pero el botón <strong>Save</strong> sigue gris o no puedes guardar en Proveedores:
+                  El botón se queda gris porque el proveedor Google requiere un correo de asistencia visible en ese panel. Recuerda <strong>recargar la página con F5</strong> en la consola de Firebase para que detecte el correo de soporte general, abre la sección de edición de Google y selecciona tu correo en el menú desplegable de correo de asistencia del proyecto antes de guardar.
                 </p>
-                <ul className="text-[10px] font-semibold text-amber-800 list-disc pl-4 mt-1 space-y-1 leading-relaxed">
+              </div>
+
+              <div>
+                <h4 className="text-[11px] font-black text-amber-900 flex items-center gap-1">
+                  <span>3. ¡La clave definitiva! Dominios Autorizados (GitHub & Preview)</span>
+                </h4>
+                <p className="text-[10px] font-semibold text-amber-700 leading-relaxed mt-0.5">
+                  No necesitas activar el proveedor de GitHub (tener el proyecto en GitHub o desplegado allí no requiere activar inicio de sesión con cuenta de GitHub, ya que usas Google). Sin embargo, <strong>debes autorizar tu dominio de GitHub Pages y el de AI Studio</strong> en Firebase para que te permita iniciar sesión:
+                </p>
+                <ol className="text-[10px] font-bold text-amber-800 list-decimal pl-4.5 mt-1 space-y-1 leading-relaxed">
                   <li>
-                    <strong>Debes recargar / refrescar la página (F5)</strong> de tu navegador en la Consola de Firebase. Como acabas de configurar el correo de asistencia, la sección de Proveedores no lo detectará hasta que actualices la pestaña de tu navegador.
-                  </li>
-                  <li>
-                    Una vez que recargues la página, vuelve a{' '}
+                    Abre los ajustes de dominios en:{' '}
                     <a 
-                      href="https://console.firebase.google.com/project/gen-lang-client-0263538171/authentication/providers" 
+                      href="https://console.firebase.google.com/project/gen-lang-client-0263538171/authentication/settings" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="underline text-blue-700 hover:text-blue-900 font-extrabold"
                     >
-                      Proveedores de Firebase Auth
+                      Ajustes de Firebase Auth (Settings)
                     </a>
-                    , edita <strong>Google</strong>, selecciona tu correo en el menú desplegable y haz clic en <strong>Save (Guardar)</strong>.
                   </li>
                   <li>
-                    <strong>Tiempo de propagación (Espera 2-3 minutos):</strong> Google tarda un momento en registrar y autorizar tu Correo de asistencia. ¡No te preocupes si tarda un minuto!
+                    Ve a la pestaña <strong>Ajustes (Settings)</strong> en la barra superior de Authentication y selecciona <strong>Dominios autorizados (Authorized domains)</strong> en el menú izquierdo.
                   </li>
-                </ul>
+                  <li>
+                    Haz clic en <strong>Agregar dominio (Add domain)</strong> y agrega los siguientes dominios:
+                    <ul className="list-disc pl-4 mt-0.5 font-semibold text-[9.5px] space-y-0.5 text-slate-700">
+                      <li><code>github.io</code> (para que funcione desde tu despliegue de GitHub)</li>
+                      <li><code>run.app</code> (para que funcione desde este entorno de pruebas de AI Studio)</li>
+                    </ul>
+                  </li>
+                  <li>
+                    Una vez agregados, ¡los inicios de sesión con Google funcionarán al instante en ambos entornos!
+                  </li>
+                </ol>
               </div>
             </div>
           </div>
