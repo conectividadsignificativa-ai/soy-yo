@@ -277,18 +277,57 @@ export default function Dashboard() {
              </p>
           </div>
 
-          {/* Iframe detection / instruction banner */}
-          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 text-left space-y-2">
-            <span className="text-xs font-black text-amber-800 flex items-center gap-1.5 uppercase tracking-wider">
-              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-              ¿El botón de Google no responde?
-            </span>
-            <p className="text-[11px] font-medium text-amber-700 leading-relaxed">
-              Si estás viendo esta aplicación dentro de la vista previa de <strong>AI Studio</strong>, los navegadores bloquean las ventanas emergentes (popups) de Google Login debido a reglas de seguridad de iframes. 
-            </p>
-            <p className="text-[11px] font-medium text-amber-700 leading-relaxed">
-              Haz clic en <strong>"Abrir en nueva pestaña"</strong> a continuación para autenticarte sin restricciones.
-            </p>
+          {/* Iframe detection & Error helpful banner */}
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 text-left space-y-3">
+            <div className="space-y-1">
+              <span className="text-xs font-black text-amber-800 flex items-center gap-1.5 uppercase tracking-wider">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-600" />
+                Guía de Solución de Problemas
+              </span>
+              <p className="text-[11px] font-medium text-amber-700 leading-relaxed">
+                Si encuentras problemas al iniciar sesión, aquí tienes cómo resolver los errores comunes:
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2.5 border-t border-amber-200/60">
+              <div>
+                <h4 className="text-[11px] font-black text-amber-900 flex items-center gap-1">
+                  <span>1. ¿El botón de Google no responde?</span>
+                </h4>
+                <p className="text-[10px] font-semibold text-amber-700 leading-relaxed mt-0.5">
+                  Si estás dentro de <strong>AI Studio</strong>, los navegadores bloquean las ventanas emergentes. Haz clic en <strong>"Abrir en nueva pestaña"</strong> a continuación.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-[11px] font-black text-amber-900 flex items-center gap-1">
+                  <span>2. ¿Aparece "The requested action is invalid"? o ¿El botón "Save" está gris?</span>
+                </h4>
+                <p className="text-[10px] font-semibold text-amber-700 leading-relaxed mt-0.5">
+                  Si ya configuraste tu correo pero el botón <strong>Save</strong> sigue gris o no puedes guardar en Proveedores:
+                </p>
+                <ul className="text-[10px] font-semibold text-amber-800 list-disc pl-4 mt-1 space-y-1 leading-relaxed">
+                  <li>
+                    <strong>Debes recargar / refrescar la página (F5)</strong> de tu navegador en la Consola de Firebase. Como acabas de configurar el correo de asistencia, la sección de Proveedores no lo detectará hasta que actualices la pestaña de tu navegador.
+                  </li>
+                  <li>
+                    Una vez que recargues la página, vuelve a{' '}
+                    <a 
+                      href="https://console.firebase.google.com/project/gen-lang-client-0263538171/authentication/providers" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="underline text-blue-700 hover:text-blue-900 font-extrabold"
+                    >
+                      Proveedores de Firebase Auth
+                    </a>
+                    , edita <strong>Google</strong>, selecciona tu correo en el menú desplegable y haz clic en <strong>Save (Guardar)</strong>.
+                  </li>
+                  <li>
+                    <strong>Tiempo de propagación (Espera 2-3 minutos):</strong> Google tarda un momento en registrar y autorizar tu Correo de asistencia. ¡No te preocupes si tarda un minuto!
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-3">
