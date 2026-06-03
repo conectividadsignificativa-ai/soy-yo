@@ -139,10 +139,7 @@ export default function ConventionalForm() {
     // Award section badge if not earned
     const sectionToBadgeMap: Record<string, string> = {
       'Información básica': 'perfil_creado',
-      'Uso de internet': 'explorador_digital',
-      'Habilidades digitales': 'aprendiz_digital',
-      'Acceso y conectividad': 'conectado',
-      'Riesgos digitales': 'navegante_consciente',
+      'Educación y situación actual': 'explorador_digital',
       'Intereses': 'rumbo_digital',
       'Empleabilidad digital': 'talento_digital',
       'Emprendimiento digital': 'constructor_ideas',

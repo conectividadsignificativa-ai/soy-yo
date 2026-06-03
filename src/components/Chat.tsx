@@ -112,16 +112,20 @@ export default function Chat() {
         }
       }
       
-      const welcomeMsg = `Sabemos que te apasiona la transformación digital, y queremos invitarte a ser parte de algo importante. Desde la Organización Internacional del Trabajo (OIT) y el Fondo de Población de las Naciones Unidas (UNFPA), agencias de la ONU en Colombia, estamos construyendo un banco de datos de jóvenes del Caribe y el Pacífico que lideran o desean sumarse a procesos de transformación digital en sus territorios.
+      const welcomeMsg = `👋 ¡Hola! Nos alegra que estés aquí.
 
-¿Trabajas por un mundo más digital? Entendemos la transformación digital como el proceso mediante el cual adoptamos tecnologías digitales para mejorar procesos, servicios y cómo relacionarnos con las personas.
+Sabemos que te apasiona la transformación digital, y queremos invitarte a ser parte de algo importante. Desde la **OIT** y el **UNFPA** — agencias de la ONU en Colombia — estamos construyendo un banco de datos de jóvenes del Caribe y el Pacífico que lideran o desean sumarse a procesos de transformación digital en sus territorios.
 
-Buscamos jóvenes con interés en continuar su trayectoria en temas digitales, así como perfiles interesados en futuras oportunidades en tres líneas clave:
+Buscamos jóvenes con interés en tres líneas clave:
 💼 Empleabilidad digital
 🚀 Emprendimiento digital
 🗳️ Participación en política pública digital
 
-Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfocadas en juventudes comprometidas con el desarrollo digital del país.`;
+Tu respuesta nos ayuda a fortalecer esta red y a diseñar convocatorias enfocadas en juventudes comprometidas con el desarrollo digital del país.
+
+Al diligenciar este formulario, autorizas el envío de información relacionada exclusivamente con el proceso de Conectividad Significativa.
+
+⏱️ Completar esto toma menos de 5 minutos. ¿Listo/a para comenzar?`;
       
       setMessages([
         { id: '1', text: welcomeMsg, sender: 'bot', timestamp: new Date() }
@@ -201,27 +205,17 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
 
       if (sectionChanged || isLast) {
         const sectionToBadgeMap: Record<string, string> = {
-          'Información Básica': 'perfil_creado',
-          'Uso de Internet': 'explorador_digital',
-          'Habilidades Digitales': 'aprendiz_digital',
-          'Acceso y Conectividad': 'conectado',
-          'Riesgos Digitales': 'navegante_consciente',
-          'Áreas de Interés': 'rumbo_digital',
-          'Empleabilidad Digital': 'talento_digital',
-          'Emprendimiento Digital': 'constructor_ideas',
-          'Política Digital': 'voz_ciudadana'
+          'Información básica': 'perfil_creado',
+          'Educación y situación actual': 'explorador_digital',
+          'Intereses': 'rumbo_digital',
+          'Empleabilidad digital': 'talento_digital',
+          'Emprendimiento digital': 'constructor_ideas',
+          'Política pública digital': 'voz_ciudadana'
         };
 
         const bid = sectionToBadgeMap[currentSection];
         if (bid && !earnedBadges.includes(bid)) {
           badgeToAward = BADGES.find(b => b.id === bid) || null;
-        }
-
-        // Special case for IA after P25
-        if (currentQuestion.variable === 'uso_ia' || currentQuestion.variable === 'uso_ia_para') {
-          if (newAnswers.uso_ia === 'si' && !earnedBadges.includes('explorador_ia')) {
-            badgeToAward = BADGES.find(b => b.id === 'explorador_ia') || null;
-          }
         }
 
         if (isLast && !earnedBadges.includes('agente_transformacion')) {
@@ -388,16 +382,20 @@ Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfoc
   };
 
   const handleReset = () => {
-    const welcomeMsg = `Sabemos que te apasiona la transformación digital, y queremos invitarte a ser parte de algo importante. Desde la Organización Internacional del Trabajo (OIT) y el Fondo de Población de las Naciones Unidas (UNFPA), agencias de la ONU en Colombia, estamos construyendo un banco de datos de jóvenes del Caribe y el Pacífico que lideran o desean sumarse a procesos de transformación digital en sus territorios.
+    const welcomeMsg = `👋 ¡Hola! Nos alegra que estés aquí.
 
-¿Trabajas por un mundo más digital? Entendemos la transformación digital como el proceso mediante el cual adoptamos tecnologías digitales para mejorar procesos, servicios y cómo relacionarnos con las personas.
+Sabemos que te apasiona la transformación digital, y queremos invitarte a ser parte de algo importante. Desde la **OIT** y el **UNFPA** — agencias de la ONU en Colombia — estamos construyendo un banco de datos de jóvenes del Caribe y el Pacífico que lideran o desean sumarse a procesos de transformación digital en sus territorios.
 
-Buscamos jóvenes con interés en continuar su trayectoria en temas digitales, así como perfiles interesados en futuras oportunidades en tres líneas clave:
+Buscamos jóvenes con interés en tres líneas clave:
 💼 Empleabilidad digital
 🚀 Emprendimiento digital
 🗳️ Participación en política pública digital
 
-Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfocadas en juventudes comprometidas con el desarrollo digital del país.`;
+Tu respuesta nos ayuda a fortalecer esta red y a diseñar convocatorias enfocadas en juventudes comprometidas con el desarrollo digital del país.
+
+Al diligenciar este formulario, autorizas el envío de información relacionada exclusivamente con el proceso de Conectividad Significativa.
+
+⏱️ Completar esto toma menos de 5 minutos. ¿Listo/a para comenzar?`;
 
     setMessages([{ id: '1', text: welcomeMsg, sender: 'bot', timestamp: new Date() }]);
     setCurrentQuestionIndex(-1);

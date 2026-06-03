@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
+import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, type User } from 'firebase/auth';
+import * as XLSX from 'xlsx';
+import { QUESTIONS } from '../constants/questions';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, Legend,
@@ -8,19 +11,54 @@ import {
 import { 
   LayoutDashboard, Users, Globe, BookOpen, Brain, Zap, ArrowLeft, 
   ShieldCheck, AlertTriangle, Monitor, Target, Heart, Search, HelpCircle, GraduationCap,
-  Calendar
+  Calendar, Download
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F43F5E'];
 
+const ALLOWED_EMAILS = [
+  'conectividadsignificativa@gmail.com'
+];
+
 export default function Dashboard() {
+  const [user, setUser] = useState<User | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  
   const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setAuthChecking(false);
+      
+      if (firebaseUser && firebaseUser.email) {
+        const emailLower = firebaseUser.email.toLowerCase();
+        if (ALLOWED_EMAILS.map(e => e.toLowerCase()).includes(emailLower)) {
+          setIsAuthorized(true);
+        } else {
+          setIsAuthorized(false);
+        }
+      } else {
+        setIsAuthorized(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthorized) {
+      setData([]);
+      return;
+    }
+
     const fetchData = async () => {
+      setLoading(true);
       try {
         const q = query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
@@ -32,7 +70,26 @@ export default function Dashboard() {
       }
     };
     fetchData();
-  }, []);
+  }, [isAuthorized]);
+
+  const handleGoogleSignIn = async () => {
+    setAuthError(null);
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err: any) {
+      console.error("Google sign in error", err);
+      setAuthError("No se pudo iniciar sesión con Google. Inténtalo de nuevo.");
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("Sign out error", err);
+    }
+  };
 
   const getChartData = (field: string) => {
     const counts: Record<string, number> = {};
@@ -59,39 +116,45 @@ export default function Dashboard() {
 
     const total = data.length;
     
-    // Bloque 1
+    // Bloque 1: Perfil General
     const ageDist = getChartData('rango_edad');
     const zoneDist = getChartData('zona');
     const groupsDist = getChartData('grupos').filter(v => v.label !== 'Ninguna de las anteriores');
+    const generoDist = getChartData('genero');
 
-    // Bloque 2
-    const topUsos = getChartData('uso_internet_principal').slice(0, 5);
-    const dejoAlgoCount = data.filter(d => d.dejo_algo === 'si').length;
-    const actividadesAfectadas = getChartData('que_dejo');
-    const horasPromedio = getChartData('horas_internet');
-    const importanciaDist = getChartData('importancia_internet');
+    // Bloque 2: Educación y Trabajo
+    const nivelEstudios = getChartData('nivel_estudios');
+    const situacionActual = getChartData('situacion_actual');
+    const interesTrabajo = getChartData('interes_trabajo_digital');
 
-    // Bloque 3
-    const nivelHabilidades = getChartData('nivel_habilidades');
-    const seguridadPercibida = getChartData('seguridad_percibida');
-    const solucionProblemas = getChartData('solucion_problemas');
-    const dondeAprendio = getChartData('donde_aprendio');
-    const usoIaCount = data.filter(d => d.uso_ia === 'si').length;
-    const usosIaDist = getChartData('uso_ia_para');
-
-    // Bloque 4
-    const tipoConexion = getChartData('forma_conexion');
-    const barreras = getChartData('barreras_conexion');
-    const riesgosCount = data.filter(d => {
-      const g = d.situaciones_riesgo;
-      const list = Array.isArray(g) ? g : (typeof g === 'string' ? g.split(', ') : []);
-      return list.length > 0 && !list.includes('ninguna');
-    }).length;
-    const sabeInfoPrivada = data.filter(d => d.conoce_info_privada === 'si').length;
-    const sabeDenunciar = data.filter(d => d.sabe_denunciar === 'si').length;
-
-    // Bloque 5
+    // Bloque 3: Intereses
     const lineasInteres = getChartData('lineas_interes');
+
+    // Bloque 4: Empleabilidad Digital
+    const areasCertificacion = getChartData('areas_certificacion').filter(v => v.label !== 'No tengo ninguna certificación');
+
+    // Bloque 5: Emprendimiento Digital
+    const tieneEmprendimientoSi = data.filter(d => d.tiene_emprendimiento === 'Sí').length;
+    const tieneEmprendimientoNo = data.filter(d => d.tiene_emprendimiento === 'No').length;
+    const tieneEmprendimientoDist = [
+      { label: 'Sí', value: tieneEmprendimientoSi },
+      { label: 'No', value: tieneEmprendimientoNo }
+    ].filter(v => v.value > 0);
+    const temaEmprendimiento = getChartData('tema_emprendimiento');
+    const etapaEmprendimiento = getChartData('etapa_emprendimiento');
+    const alcanceEmprendimiento = getChartData('alcance_emprendimiento');
+    const barrerasEmprendimiento = getChartData('barreras_emprendimiento');
+
+    // Bloque 6: Política Pública Digital
+    const participacionPreviaSi = data.filter(d => d.participacion_previa === 'Sí').length;
+    const participacionPreviaNo = data.filter(d => d.participacion_previa === 'No').length;
+    const participacionPreviaDist = [
+      { label: 'Sí', value: participacionPreviaSi },
+      { label: 'No', value: participacionPreviaNo }
+    ].filter(v => v.value > 0);
+    const perteneceRedDist = getChartData('pertenece_red');
+    const temasPolitica = getChartData('temas_politica');
+    const formaParticipar = getChartData('forma_participar');
 
     // Actividad Diaria
     const dailyCounts: Record<string, number> = {};
@@ -109,21 +172,187 @@ export default function Dashboard() {
 
     return {
       total,
-      ageDist, zoneDist, groupsDist,
-      topUsos, dejoAlgoCount, actividadesAfectadas, horasPromedio, importanciaDist,
-      nivelHabilidades, seguridadPercibida, solucionProblemas, dondeAprendio, usoIaCount, usosIaDist,
-      tipoConexion, barreras, riesgosCount, sabeInfoPrivada, sabeDenunciar,
+      ageDist, zoneDist, groupsDist, generoDist,
+      nivelEstudios, situacionActual, interesTrabajo,
       lineasInteres,
+      areasCertificacion,
+      tieneEmprendimientoDist, temaEmprendimiento, etapaEmprendimiento, alcanceEmprendimiento, barrerasEmprendimiento,
+      participacionPreviaDist, perteneceRedDist, temasPolitica, formaParticipar,
       dailyActivity
     };
   }, [data]);
 
+  const handleExportExcel = () => {
+    setIsExporting(true);
+    try {
+      // 1. Create mapping from variable name to actual question text
+      const fieldMapping = QUESTIONS.reduce((acc, q) => {
+        acc[q.variable] = q.text;
+        return acc;
+      }, {} as Record<string, string>);
+
+      // 2. Prepare data for Excel
+      const excelData = data.map(submission => {
+        const row: Record<string, any> = {};
+        
+        // Add timestamp as the first column
+        if (submission.createdAt) {
+          const date = submission.createdAt.toDate ? submission.createdAt.toDate() : new Date(submission.createdAt.seconds * 1000);
+          row['Fecha de Envío'] = date.toLocaleString();
+        }
+
+        // Add each question using its human-readable text as header
+        Object.keys(submission).forEach(key => {
+          if (key === 'createdAt' || key === 'userId') return; // Skip internal fields
+          
+          const header = fieldMapping[key] || key;
+          let value = submission[key];
+          
+          // Format arrays (multi-select) as comma-separated strings
+          if (Array.isArray(value)) {
+            value = value.join(', ');
+          }
+          
+          row[header] = value;
+        });
+
+        return row;
+      });
+
+      // 3. Generate Excel file
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Caracterización");
+      
+      // 4. Trigger download
+      const fileName = `Caracterizacion_Digital_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+    } catch (error) {
+      console.error("Export error:", error);
+      alert("Hubo un error al generar el archivo Excel.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
+        <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-3xl border border-slate-100 shadow-sm max-w-sm text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin animate-duration-1000"></div>
+          <p className="text-slate-600 font-bold">Verificando credenciales...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-4 relative overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl border border-slate-100 max-w-md w-full text-center relative z-10 space-y-8"
+        >
+          <div className="flex justify-center flex-col items-center gap-4">
+             <div className="flex items-center gap-4 justify-center mb-2">
+               <img 
+                 src="https://drive.google.com/uc?export=view&id=174vtmcqrDB0haU8p_G9CVfWZxAn3fOvn"
+                 alt="OIT & UNFPA"
+                 className="h-10 object-contain referrerPolicy"
+                 referrerPolicy="no-referrer"
+               />
+             </div>
+             <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center ring-4 ring-blue-50/50">
+               <ShieldCheck className="w-8 h-8" />
+             </div>
+             <h2 className="text-2xl font-black text-slate-900 tracking-tight mt-2">Acceso Administrativo</h2>
+             <p className="text-sm font-semibold text-slate-500 leading-relaxed max-w-xs">
+               Este panel de administración y estadísticas contiene información protegida. Inicia sesión con una cuenta de Google autorizada.
+             </p>
+          </div>
+
+          <div className="space-y-4">
+            <button
+              onClick={handleGoogleSignIn}
+              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-bold px-6 py-4 rounded-2xl border-2 border-slate-200 hover:border-slate-300 transition-all shadow-md active:scale-[0.98] cursor-pointer"
+            >
+              <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+                <path
+                  fill="#EA4335"
+                  d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.53-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.111C18.29 1.94 15.42 1 12.24 1 5.922 1 .8 6.122.8 12.4s5.122 11.4 11.44 11.4c6.6 0 11.01-4.637 11.01-11.22 0-.755-.08-1.33-.178-1.895H12.24z"
+                />
+              </svg>
+              <span>Acceder con Google</span>
+            </button>
+
+            {authError && (
+              <p className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100">
+                {authError}
+              </p>
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-xs font-bold text-slate-400">
+             <Link to="/" className="hover:text-blue-600 transition-colors flex items-center gap-1.5">
+               <ArrowLeft className="w-3.5 h-3.5" />
+               Volver al chatbot
+             </Link>
+             <span>Encriptado SSL — OIT & UNFPA</span>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-4 relative overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-xl border border-slate-100 max-w-md w-full text-center relative z-10 space-y-6"
+        >
+          <div className="flex justify-center flex-col items-center gap-4">
+             <div className="w-16 h-16 bg-red-50 text-red-600 rounded-[1.5rem] flex items-center justify-center ring-4 ring-red-50/50">
+               <AlertTriangle className="w-8 h-8" />
+             </div>
+             <h2 className="text-2xl font-black text-slate-900 tracking-tight">Acceso No Autorizado</h2>
+             <p className="text-sm font-semibold text-slate-500 leading-relaxed">
+               La cuenta de Google <span className="text-red-600 font-extrabold break-all">{user.email}</span> no se encuentra en la lista de administradores permitidos para este proyecto.
+             </p>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <button
+              onClick={handleSignOut}
+              className="w-full bg-slate-900 hover:bg-black text-white font-bold p-4 rounded-2xl transition-all shadow-md active:scale-[0.98] cursor-pointer"
+            >
+              Cerrar Sesión / Usar otro correo
+            </button>
+            <Link 
+              to="/" 
+              className="w-full inline-block bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold p-4 rounded-2xl transition-all"
+            >
+              Ir al Chatbot
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-600 font-medium">Procesando datos territoriales...</p>
+          <p className="text-slate-600 font-bold">Procesando datos territoriales...</p>
         </div>
       </div>
     );
@@ -131,14 +360,17 @@ export default function Dashboard() {
 
   if (!stats) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-6">
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center space-y-4">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-6 font-sans">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center space-y-4 max-w-sm">
           <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto">
             <Search className="w-8 h-8" />
           </div>
           <h2 className="text-xl font-bold text-slate-900">No hay datos aún</h2>
-          <p className="text-slate-500 max-w-xs">Comienza la caracterización para ver los indicadores en tiempo real.</p>
-          <Link to="/" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold">Ir al Chatbot</Link>
+          <p className="text-slate-500 max-w-xs text-sm">Comienza la caracterización para ver los indicadores en tiempo real.</p>
+          <div className="flex flex-col gap-2 pt-2">
+            <Link to="/" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold text-center">Ir al Chatbot</Link>
+            <button onClick={handleSignOut} className="text-xs font-bold text-slate-400 hover:text-slate-600">Cerrar Sesión ({user.email})</button>
+          </div>
         </div>
       </div>
     );
@@ -163,11 +395,38 @@ export default function Dashboard() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4 relative z-10">
+          <div className="flex flex-wrap items-center gap-4 relative z-10">
             <div className="bg-slate-50 px-5 py-3 rounded-2xl border border-slate-200">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Total Caracterizados</span>
               <span className="text-2xl font-black text-blue-600">{stats.total}</span>
             </div>
+
+            <div className="hidden lg:flex flex-col text-right justify-center bg-slate-50 border border-slate-200 px-5 py-2.5 rounded-2xl">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Administrador</span>
+              <span className="text-xs font-black text-slate-700 block truncate max-w-[200px]">{user?.email}</span>
+            </div>
+
+            <button 
+              onClick={handleExportExcel}
+              disabled={isExporting}
+              className="flex items-center gap-2 px-6 py-3 text-sm font-bold bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50 cursor-pointer"
+            >
+              {isExporting ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              Exportar Excel
+            </button>
+
+            <button 
+              onClick={handleSignOut}
+              className="px-4 py-3 text-sm font-bold bg-slate-100 text-slate-700 rounded-2xl hover:bg-slate-200 transition-all cursor-pointer"
+              title="Cerrar Sesión"
+            >
+              Cerrar Sesión
+            </button>
+
             <Link to="/" className="px-6 py-3 text-sm font-bold bg-slate-900 text-white rounded-2xl hover:bg-black transition-all shadow-lg">
               Volver
             </Link>
@@ -176,8 +435,8 @@ export default function Dashboard() {
 
         {/* 1. PERFIL GENERAL */}
         <SectionHeader title="BLOQUE 1: Perfil General" icon={<Users />} />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ChartCard title="Distribución por Rango de Edad">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <ChartCard title="Rango de Edad">
             <SimpleBarChart data={stats.ageDist} />
           </ChartCard>
           <ChartCard title="Distribución por Zona">
@@ -186,112 +445,40 @@ export default function Dashboard() {
           <ChartCard title="Grupos Priorizados">
             <HorizontalBarChart data={stats.groupsDist} color="#8B5CF6" />
           </ChartCard>
+          <ChartCard title="Identificación de Género">
+            <HorizontalBarChart data={stats.generoDist} color="#06B6D4" />
+          </ChartCard>
         </div>
 
-        {/* 2. USO DE INTERNET */}
-        <SectionHeader title="BLOQUE 2: Uso de Internet" icon={<Globe />} />
+        {/* 2. EDUCACIÓN Y TRABAJO */}
+        <SectionHeader title="BLOQUE 2: Educación y Trabajo" icon={<BookOpen />} />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ChartCard title="Principales Usos de Internet">
-            <HorizontalBarChart data={stats.topUsos} color="#F59E0B" />
+          <ChartCard title="Nivel de Estudios">
+            <HorizontalBarChart data={stats.nivelEstudios} color="#F59E0B" />
           </ChartCard>
-          <div className="flex flex-col gap-6">
-            <KPICard 
-              label="Brecha de Oportunidad" 
-              value={`${((stats.dejoAlgoCount / stats.total) * 100).toFixed(1)}%`}
-              sublabel="Dejaron de hacer algo por falta de internet"
-              color="bg-red-50 text-red-600"
-              icon={<AlertTriangle />}
-            />
-            <ChartCard title="Horas Promedio de Uso" className="flex-1">
-              <PieChartUI data={stats.horasPromedio} hole innerRadius={40} />
-            </ChartCard>
-          </div>
-          <div className="lg:col-span-1 space-y-6">
-            <ChartCard title="Actividades Afectadas">
-              <HorizontalBarChart data={stats.actividadesAfectadas} color="#EF4444" />
-            </ChartCard>
-            <ChartCard title="Importancia del Internet">
-              <SimpleBarChart data={stats.importanciaDist} color="#06B6D4" />
-            </ChartCard>
-          </div>
+          <ChartCard title="Situación Actual">
+            <HorizontalBarChart data={stats.situacionActual} color="#10B981" />
+          </ChartCard>
+          <ChartCard title="Interés en Trabajar en Tecnología">
+            <SimpleBarChart data={stats.interesTrabajo} color="#3B82F6" />
+          </ChartCard>
         </div>
 
-        {/* 3. HABILIDADES DIGITALES E IA */}
-        <SectionHeader title="BLOQUE 3: Habilidades Digitales e IA" icon={<Brain />} />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ChartCard title="Nivel de Habilidades">
-            <PieChartUI data={stats.nivelHabilidades} colors={['#10B981', '#3B82F6', '#F59E0B']} />
+        {/* 3. LÍNEAS DE INTERÉS */}
+        <SectionHeader title="BLOQUE 3: Líneas de Interés Escogidas" icon={<Target />} />
+        <div className="grid grid-cols-1 gap-6">
+          <ChartCard title="Distribución por Líneas de Interés (Selección Múltiple)">
+            <HorizontalBarChart data={stats.lineasInteres} color="#EC4899" />
           </ChartCard>
-          <ChartCard title="Capacidad de Uso Seguro">
-            <SimpleBarChart data={stats.seguridadPercibida} color="#8B5CF6" />
-          </ChartCard>
-          <ChartCard title="Resolución de Problemas">
-            <HorizontalBarChart data={stats.solucionProblemas} color="#3B82F6" />
-          </ChartCard>
-          <ChartCard title="Origen de Formación" className="lg:col-span-1">
-             <HorizontalBarChart data={stats.dondeAprendio} color="#EC4899" />
-          </ChartCard>
-          <div className="flex flex-col gap-6">
-            <KPICard 
-              label="Adopción de IA" 
-              value={`${((stats.usoIaCount / stats.total) * 100).toFixed(1)}%`}
-              sublabel="Han usado herramientas de IA"
-              color="bg-emerald-50 text-emerald-600"
-              icon={<Zap />}
-            />
-            <ChartCard title="Principales Usos de IA" className="flex-1">
-              <HorizontalBarChart data={stats.usosIaDist} color="#10B981" />
-            </ChartCard>
-          </div>
-          <div className="bg-blue-600 p-8 rounded-[2rem] flex flex-col items-center justify-center text-center text-white space-y-4">
-             <GraduationCap className="w-12 h-12 opacity-50" />
-             <p className="text-sm font-bold uppercase tracking-widest opacity-80">Insights de Habilidades</p>
-             <p className="text-xl font-medium leading-relaxed">
-               La mayoría de los jóvenes se consideran en un nivel 
-               <span className="font-black text-yellow-400 block text-2xl mt-2">{stats.nivelHabilidades[0]?.label || 'Básico'}</span>
-             </p>
-          </div>
         </div>
 
-        {/* 4. ACCESO, CONECTIVIDAD Y RIESGOS */}
-        <SectionHeader title="BLOQUE 4: Acceso, Conectividad y Riesgos" icon={<ShieldCheck />} />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ChartCard title="Tipo de Conexión Predominante">
-            <HorizontalBarChart data={stats.tipoConexion} color="#3B82F6" />
-          </ChartCard>
-          <ChartCard title="Barreras de Conectividad">
-            <HorizontalBarChart data={stats.barreras} color="#EF4444" />
-          </ChartCard>
-          <div className="space-y-6">
-            <KPICard 
-              label="Exposición a Riesgos" 
-              value={`${((stats.riesgosCount / stats.total) * 100).toFixed(1)}%`}
-              sublabel="Han vivido situaciones de riesgo digital"
-              color="bg-orange-50 text-orange-600"
-              icon={<AlertTriangle />}
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <StatusMiniCard 
-                label="Privacidad" 
-                percent={Math.round((stats.sabeInfoPrivada / stats.total) * 100)} 
-                desc="Saben proteger datos"
-              />
-              <StatusMiniCard 
-                label="Denuncia" 
-                percent={Math.round((stats.sabeDenunciar / stats.total) * 100)} 
-                desc="Saben dónde acudir"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 5. PROYECCIÓN E INTERESES */}
-        <SectionHeader title="BLOQUE 5: Proyección e Intereses" icon={<Target />} />
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-          <ChartCard title="Distribución por Líneas de Interés">
-            <div className="h-[400px]">
+        {/* 4. EMPLEABILIDAD DIGITAL */}
+        <SectionHeader title="BLOQUE 4: Empleabilidad Digital" icon={<GraduationCap />} />
+        <div className="grid grid-cols-1 gap-6">
+          <ChartCard title="Áreas con Certificaciones Técnicas / Tecnológicas">
+            <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.lineasInteres} margin={{ top: 20, right: 30, left: 40, bottom: 60 }}>
+                <BarChart data={stats.areasCertificacion} margin={{ top: 20, right: 30, left: 40, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
                   <XAxis 
                     dataKey="label" 
@@ -308,13 +495,50 @@ export default function Dashboard() {
                     contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                   />
                   <Bar dataKey="value" radius={[10, 10, 0, 0]}>
-                    {stats.lineasInteres.map((entry, index) => (
+                    {stats.areasCertificacion.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
+          </ChartCard>
+        </div>
+
+        {/* 5. EMPRENDIMIENTO DIGITAL */}
+        <SectionHeader title="BLOQUE 5: Emprendimiento Digital" icon={<Zap />} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ChartCard title="Desarrolla Emprendimiento">
+            <PieChartUI data={stats.tieneEmprendimientoDist} colors={['#10B981', '#EF4444']} hole innerRadius={40} />
+          </ChartCard>
+          <ChartCard title="Temáticas de Emprendimiento">
+            <HorizontalBarChart data={stats.temaEmprendimiento} color="#8B5CF6" />
+          </ChartCard>
+          <ChartCard title="Etapa de la Iniciativa">
+            <SimpleBarChart data={stats.etapaEmprendimiento} color="#F59E0B" />
+          </ChartCard>
+          <ChartCard title="Alcance Territorial">
+            <PieChartUI data={stats.alcanceEmprendimiento} colors={['#3B82F6', '#06B6D4', '#8B5CF6']} />
+          </ChartCard>
+          <ChartCard title="Barreras Enfrentadas (Multiselección)" className="lg:col-span-2">
+            <HorizontalBarChart data={stats.barrerasEmprendimiento} color="#EF4444" />
+          </ChartCard>
+        </div>
+
+        {/* 6. POLÍTICA PÚBLICA DIGITAL */}
+        <SectionHeader title="BLOQUE 6: Política Pública Digital" icon={<ShieldCheck />} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ChartCard title="Participación Ciudadana Previa">
+            <PieChartUI data={stats.participacionPreviaDist} colors={['#10B981', '#EF4444']} hole innerRadius={45} />
+          </ChartCard>
+          <ChartCard title="Pertenencia a Organizaciones / Redes">
+            <PieChartUI data={stats.perteneceRedDist} colors={['#3B82F6', '#F59E0B']} />
+          </ChartCard>
+          <ChartCard title="Temáticas de Interés de Política Pública">
+            <HorizontalBarChart data={stats.temasPolitica} color="#06B6D4" />
+          </ChartCard>
+          <ChartCard title="Cómo les gustaría contribuir o participar (Multiselección)" className="lg:col-span-3">
+            <HorizontalBarChart data={stats.formaParticipar} color="#8B5CF6" />
           </ChartCard>
         </div>
 

@@ -11,14 +11,18 @@ service cloud.firestore {
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
     function incoming() { return request.resource.data; }
     
-    // Administrative check (can be expanded)
-    function isAdmin() { 
-      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    // Administrative check
+    function isAllowedAdmin() {
+      return isSignedIn() 
+        && request.auth.token.email_verified == true 
+        && (
+          request.auth.token.email == 'conectividadsignificativa@gmail.com'
+        );
     }
 
     match /submissions/{submissionId} {
       allow create: if isSignedIn() && isValidId(submissionId) && isValidSubmission(incoming());
-      allow get, list: if isSignedIn();
+      allow get, list: if isAllowedAdmin();
     }
 
     match /profiles/{userId} {
