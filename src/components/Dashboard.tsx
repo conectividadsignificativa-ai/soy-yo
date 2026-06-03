@@ -19,7 +19,8 @@ import { Link } from 'react-router-dom';
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F43F5E'];
 
 const ALLOWED_EMAILS = [
-  'conectividadsignificativa@gmail.com'
+  'conectividadsignificativa@gmail.com',
+  'nicolsg40@gmail.com'
 ];
 
 export default function Dashboard() {
