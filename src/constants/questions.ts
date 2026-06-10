@@ -36,14 +36,7 @@ export const QUESTIONS: Question[] = [
     required: true,
     placeholder: 'Escribe tu nombre y apellidos...'
   },
-  {
-    id: 'p2',
-    section: 'Información básica',
-    variable: 'fecha_nac',
-    text: '¿Cuál es tu fecha de nacimiento? (día / mes / año)',
-    type: 'date',
-    required: true
-  },
+
   {
     id: 'p3',
     section: 'Información básica',
@@ -217,7 +210,7 @@ export const QUESTIONS: Question[] = [
     options: [
       'Sí, estoy buscando algo en ese sector',
       'Me interesa, pero no he explorado opciones aún',
-      'Ya tengo experiencia en temas digitales',
+      'Ya tengo experiencia en temas digitales, o estoy trabajando en estos temas',
       'No me interesan los temas digitales o de tecnología'
     ],
     required: true
@@ -259,6 +252,7 @@ export const QUESTIONS: Question[] = [
       'Inteligencia Artificial',
       'Diseño UX/UI',
       'Marketing digital',
+      'Observación satelital',
       'Soporte técnico',
       'Otra — ¿cuál?',
       'No tengo ninguna certificación'
@@ -317,7 +311,7 @@ export const QUESTIONS: Question[] = [
     section: 'Emprendimiento digital',
     variable: 'tema_emprendimiento',
     text: '¿Qué tema aborda principalmente tu iniciativa?',
-    type: 'select',
+    type: 'multi-select',
     options: [
       'Educación',
       'Salud',
@@ -345,7 +339,9 @@ export const QUESTIONS: Question[] = [
     condition: (a) => {
       const li = a.lineas_interes;
       const list = Array.isArray(li) ? li : (typeof li === 'string' ? li.split(', ') : []);
-      return list.includes('Emprendimiento digital — ideas, soluciones y negocios con tecnología') && a.tiene_emprendimiento === 'Sí' && a.tema_emprendimiento === 'Otro — ¿cuál?';
+      const t = a.tema_emprendimiento;
+      const tlist = Array.isArray(t) ? t : (typeof t === 'string' ? t.split(', ') : []);
+      return list.includes('Emprendimiento digital — ideas, soluciones y negocios con tecnología') && a.tiene_emprendimiento === 'Sí' && tlist.includes('Otro — ¿cuál?');
     },
     placeholder: 'Especifica el tema de tu iniciativa...'
   },

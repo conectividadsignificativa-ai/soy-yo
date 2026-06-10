@@ -315,16 +315,39 @@ export default function ConventionalForm() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-blue-600 p-8 rounded-[2rem] text-white space-y-4 shadow-xl shadow-blue-100"
+            className="bg-blue-600 p-8 rounded-[2rem] text-white space-y-6 shadow-xl shadow-blue-100"
           >
             <div className="flex items-center gap-3">
-               <ShieldCheck className="w-8 h-8 opacity-50" />
-               <h2 className="text-2xl font-bold">Bienvenido a la caracterización</h2>
+               <span className="text-3xl">👋</span>
+               <h2 className="text-2xl font-black">¡Hola! Nos alegra que estés aquí.</h2>
             </div>
-            <p className="text-blue-50/90 leading-relaxed text-sm">
-               Este es un formulario convencional. Puedes navegar entre secciones usando los botones al final de cada página. 
-               Tu progreso se guarda automáticamente por sección.
-            </p>
+            <div className="space-y-4 text-blue-50/95 leading-relaxed text-sm">
+              <p>
+                Sabemos que te apasiona la transformación digital, y queremos invitarte a ser parte de algo importante. Desde la Organización Internacional del Trabajo (OIT) y el Fondo de Población de las Naciones Unidas (UNFPA), agencias de la ONU en Colombia, estamos construyendo un banco de datos de jóvenes del Caribe y el Pacífico que lideran o desean sumarse a procesos de transformación digital en sus territorios.
+              </p>
+              <p className="font-bold border-l-4 border-blue-300 pl-3 bg-blue-700/30 py-2 rounded-r-xl">
+                ¿Trabajas por un mundo más digital? Entendemos la transformación digital como el proceso mediante el cual adoptamos tecnologías digitales para mejorar procesos, servicios y cómo relacionarnos con las personas.
+              </p>
+              <p>
+                Buscamos jóvenes con interés en continuar su trayectoria en temas digitales, así como perfiles interesados en futuras oportunidades en tres líneas clave:
+              </p>
+              <div className="pl-4 space-y-1.5 font-bold text-white bg-blue-700/20 p-3 rounded-xl border border-blue-500/30">
+                <div>💼  Empleabilidad digital</div>
+                <div>🚀  Emprendimiento digital</div>
+                <div>🗳️  Participación en política pública digital</div>
+              </div>
+              <p>
+                Tu respuesta nos ayudará a fortalecer esta red y a diseñar convocatorias enfocadas en juventudes comprometidas con el desarrollo digital del país.
+              </p>
+              <hr className="border-blue-400/50" />
+              <p className="text-xs opacity-90 italic">
+                Al diligenciar este formulario, autorizas el envío de información relacionada exclusivamente con el proceso de Conectividad Significativa a través de los datos de contacto suministrados 
+              </p>
+              <div className="flex items-center gap-1.5 text-xs font-black bg-blue-700 text-yellow-300 px-3 py-2 rounded-lg w-fit">
+                <span>⏱️</span>
+                <span>Completar este formulario toma menos de 5 minutos.</span>
+              </div>
+            </div>
           </motion.div>
         )}
 

@@ -17,7 +17,7 @@ export const BADGES: Badge[] = [
   {
     id: 'explorador_digital',
     name: 'Explorador/a digital',
-    description: '🌍 ¡Genial! Ya sabemos cómo usas internet en tu día a día.',
+    description: '¡Genial! Ya sabemos un poco más sobre ti.',
     icon: '🌍',
     points: 60
   },

@@ -114,18 +114,13 @@ export default function Chat() {
       
       const welcomeMsg = `👋 ¡Hola! Nos alegra que estés aquí.
 
-Sabemos que te apasiona la transformación digital, y queremos invitarte a ser parte de algo importante. Desde la **OIT** y el **UNFPA** — agencias de la ONU en Colombia — estamos construyendo un banco de datos de jóvenes del Caribe y el Pacífico que lideran o desean sumarse a procesos de transformación digital en sus territorios.
+Buscamos jóvenes con interés en tres temas: 💼 Empleabilidad digital 🚀 Emprendimiento digital 🗳️ Participación en política pública digital 
 
-Buscamos jóvenes con interés en tres líneas clave:
-💼 Empleabilidad digital
-🚀 Emprendimiento digital
-🗳️ Participación en política pública digital
 
+Si seguiste leyendo, nos confirmas que te apasiona la transformación digital, y queremos invitarte a ser parte de algo importante. Desde la OIT y el UNFPA — agencias de la ONU en Colombia — estamos construyendo un banco de datos de jóvenes del Caribe y el Pacífico que lideran o desean sumarse a procesos de transformación digital en sus territorios.
 Tu respuesta nos ayuda a fortalecer esta red y a diseñar convocatorias enfocadas en juventudes comprometidas con el desarrollo digital del país.
-
 Al diligenciar este formulario, autorizas el envío de información relacionada exclusivamente con el proceso de Conectividad Significativa.
-
-⏱️ Completar esto toma menos de 5 minutos. ¿Listo/a para comenzar?`;
+⏱ ️ Completar esto toma menos de 5 minutos. ¿Empezamos?`;
       
       setMessages([
         { id: '1', text: welcomeMsg, sender: 'bot', timestamp: new Date() }
@@ -231,7 +226,7 @@ Al diligenciar este formulario, autorizas el envío de información relacionada 
         setEarnedBadges(prev => [...prev, badgeToAward!.id]);
         setShowBadgePopup(badgeToAward);
 
-        const badgeMsg = `${badgeToAward.description}\n\n**+${pointsAwarded} puntos**\nSigues avanzando 💪\nVamos muy bien 🚀`;
+        const badgeMsg = `${badgeToAward.description}\n\n**+${pointsAwarded} puntos**\nSigue avanzando 💪\nVamos muy bien 🚀`;
         setMessages(prev => [...prev, { id: `badge-msg-${Date.now()}`, text: badgeMsg, sender: 'bot', timestamp: new Date() }]);
 
         if (auth.currentUser) {
@@ -384,18 +379,13 @@ Al diligenciar este formulario, autorizas el envío de información relacionada 
   const handleReset = () => {
     const welcomeMsg = `👋 ¡Hola! Nos alegra que estés aquí.
 
-Sabemos que te apasiona la transformación digital, y queremos invitarte a ser parte de algo importante. Desde la **OIT** y el **UNFPA** — agencias de la ONU en Colombia — estamos construyendo un banco de datos de jóvenes del Caribe y el Pacífico que lideran o desean sumarse a procesos de transformación digital en sus territorios.
+Buscamos jóvenes con interés en tres temas: 💼 Empleabilidad digital 🚀 Emprendimiento digital 🗳️ Participación en política pública digital 
 
-Buscamos jóvenes con interés en tres líneas clave:
-💼 Empleabilidad digital
-🚀 Emprendimiento digital
-🗳️ Participación en política pública digital
 
+Si seguiste leyendo, nos confirmas que te apasiona la transformación digital, y queremos invitarte a ser parte de algo importante. Desde la OIT y el UNFPA — agencias de la ONU en Colombia — estamos construyendo un banco de datos de jóvenes del Caribe y el Pacífico que lideran o desean sumarse a procesos de transformación digital en sus territorios.
 Tu respuesta nos ayuda a fortalecer esta red y a diseñar convocatorias enfocadas en juventudes comprometidas con el desarrollo digital del país.
-
 Al diligenciar este formulario, autorizas el envío de información relacionada exclusivamente con el proceso de Conectividad Significativa.
-
-⏱️ Completar esto toma menos de 5 minutos. ¿Listo/a para comenzar?`;
+⏱ ️ Completar esto toma menos de 5 minutos. ¿Empezamos?`;
 
     setMessages([{ id: '1', text: welcomeMsg, sender: 'bot', timestamp: new Date() }]);
     setCurrentQuestionIndex(-1);
@@ -480,10 +470,6 @@ Al diligenciar este formulario, autorizas el envío de información relacionada 
           </div>
           
           <div className="flex items-center gap-4">
-            <Link to="/form" className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-500 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all">
-                <ClipboardList className="w-4 h-4" />
-                Formulario
-            </Link>
             <div className="hidden sm:flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
               <Trophy className="w-3.5 h-3.5 text-yellow-500" />
               <span className="text-xs font-black text-slate-700">{points} pts</span>
@@ -623,13 +609,6 @@ Al diligenciar este formulario, autorizas el envío de información relacionada 
                   <Sparkles className="w-5 h-5" />
                   ¡Empezar encuesta!
                 </button>
-                <Link 
-                  to="/form" 
-                  className="w-full bg-slate-50 text-slate-500 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-all flex items-center justify-center gap-2 border border-slate-100"
-                >
-                  <ClipboardList className="w-4 h-4" />
-                  ¿Prefieres un formulario tradicional? Haz clic aquí
-                </Link>
               </div>
             )}
 
