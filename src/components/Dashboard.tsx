@@ -6,17 +6,28 @@ import * as XLSX from 'xlsx';
 import { QUESTIONS } from '../constants/questions';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, Legend,
+  PieChart, Pie, Cell, Legend, RadialBarChart, RadialBar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from 'recharts';
 import { 
   LayoutDashboard, Users, Globe, BookOpen, Brain, Zap, ArrowLeft, 
-  ShieldCheck, AlertTriangle, Monitor, Target, Heart, Search, HelpCircle, GraduationCap,
-  Calendar, Download
+  ShieldCheck, AlertTriangle, Monitor, Target, Search, GraduationCap,
+  Calendar, Download, FileSpreadsheet, RotateCcw, Link2, ExternalLink, Info
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
+import { generateMockSubmissions } from './dashboard/mockData';
+import TransversalViews from './dashboard/TransversalViews';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F43F5E'];
+
+const REFERRAL_LABELS: Record<string, string> = {
+  'goyn': 'GOYN',
+  'cora': 'CORA',
+  'fedesoft': 'Fedesoft',
+  'cintel': 'Cintel',
+  'oit': 'OIT',
+  'directo': 'Directo (Estándar)'
+};
 
 const ALLOWED_EMAILS = [
   'conectividadsignificativa@gmail.com',
@@ -33,6 +44,16 @@ export default function Dashboard() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Filters state
+  const [regionFilter, setRegionFilter] = useState<'all' | 'caribe' | 'pacifico'>('all');
+  const [useMock, setUseMock] = useState(true); // Default to true if Firestore is initially empty or for exploration, but dynamically disabled if real exist
+  const [activeTab, setActiveTab] = useState<'summary' | 'demographics' | 'education' | 'employability' | 'entrepreneurship' | 'policy'>('summary');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Department definitions
+  const CARIBE_DEPTS = ['Atlántico', 'Bolívar', 'Cesar', 'Córdoba', 'La Guajira', 'Magdalena', 'Sucre', 'San Andrés'];
+  const PACIFICO_DEPTS = ['Chocó', 'Valle del Cauca', 'Cauca', 'Nariño'];
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -53,6 +74,8 @@ export default function Dashboard() {
     return () => unsubscribe();
   }, []);
 
+  const [realEntriesExist, setRealEntriesExist] = useState(false);
+
   useEffect(() => {
     if (!isAuthorized) {
       setData([]);
@@ -64,15 +87,56 @@ export default function Dashboard() {
       try {
         const q = query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
-        setData(querySnapshot.docs.map(doc => doc.data()));
+        const docs = querySnapshot.docs.map(doc => doc.data());
+        
+        if (docs.length > 0) {
+          setData(docs);
+          setUseMock(false); // Disconnect mock automatically since we have real submissions
+          setRealEntriesExist(true);
+        } else {
+          // If no real surveys, load mock submissions as safe sandbox fallback
+          setData(generateMockSubmissions());
+          setUseMock(true);
+          setRealEntriesExist(false);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
+        // Load mock submissions if Firestore permissions or other transient issues block fetching
+        setData(generateMockSubmissions());
+        setUseMock(true);
+        setRealEntriesExist(false);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
   }, [isAuthorized]);
+
+  // Handle mock switcher toggle
+  const toggleMockData = () => {
+    if (useMock) {
+      // Switch back to real (if exist, else set empty list)
+      setLoading(true);
+      const fetchData = async () => {
+        try {
+          const q = query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
+          const querySnapshot = await getDocs(q);
+          const docs = querySnapshot.docs.map(doc => doc.data());
+          setData(docs);
+          setUseMock(false);
+        } catch {
+          setData([]);
+          setUseMock(false);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchData();
+    } else {
+      setData(generateMockSubmissions());
+      setUseMock(true);
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     setAuthError(null);
@@ -94,77 +158,134 @@ export default function Dashboard() {
     }
   };
 
-  const getChartData = (field: string) => {
+  // 1. Apply regional filters to dataset
+  const filteredData = useMemo(() => {
+    if (regionFilter === 'caribe') {
+      return data.filter(item => item.departamento && CARIBE_DEPTS.includes(item.departamento));
+    }
+    if (regionFilter === 'pacifico') {
+      return data.filter(item => item.departamento && PACIFICO_DEPTS.includes(item.departamento));
+    }
+    return data;
+  }, [data, regionFilter]);
+
+  // Helper chart generator
+  const getProcessedChartData = (field: string) => {
     const counts: Record<string, number> = {};
-    data.forEach(item => {
+    filteredData.forEach(item => {
       const val = item[field];
       if (val) {
         const values = Array.isArray(val) 
           ? val 
-          : (typeof val === 'string' && val.includes(',') ? val.split(',').map(s => s.trim()) : [val]);
+          : (typeof val === 'string' && val.includes(',') ? val.split(',').map((s: string) => s.trim()) : [val]);
         
-        values.forEach(v => {
+        values.forEach((v: string) => {
           counts[v] = (counts[v] || 0) + 1;
         });
       }
     });
+
     return Object.entries(counts)
       .map(([label, value]) => ({ label, value }))
       .sort((a, b) => b.value - a.value);
   };
 
-  // KPI Calculations
-  const stats = useMemo(() => {
-    if (!data.length) return null;
+  // Calculations for charts & stats in individual blocks
+  const metrics = useMemo(() => {
+    if (!filteredData.length) return null;
 
-    const total = data.length;
-    
-    // Bloque 1: Perfil General
-    const ageDist = getChartData('rango_edad');
-    const zoneDist = getChartData('zona');
-    const groupsDist = getChartData('grupos').filter(v => v.label !== 'Ninguna de las anteriores');
-    const generoDist = getChartData('genero');
+    const total = filteredData.length;
 
-    // Bloque 2: Educación y Trabajo
-    const nivelEstudios = getChartData('nivel_estudios');
-    const situacionActual = getChartData('situacion_actual');
-    const interesTrabajo = getChartData('interes_trabajo_digital');
+    // --- SECCIÓN 1: DATOS DEMOGRÁFICOS ---
+    const departamentoRaw = getProcessedChartData('departamento');
+    const municipioRaw = getProcessedChartData('municipio').slice(0, 10);
+    const zonaRaw = getProcessedChartData('zona');
+    const groupsRaw = getProcessedChartData('grupos').filter(v => v.label !== 'Ninguna de las anteriores');
+    const generoRaw = getProcessedChartData('genero');
+    const discapacidadRaw = getProcessedChartData('tipo_discapacidad');
 
-    // Bloque 3: Intereses
-    const lineasInteres = getChartData('lineas_interes');
+    // Ordinal sorting for Rango de Edad
+    const ageOrdinalOrder = ['12–14 años', '15–17 años', '18–21 años', '22–25 años', '26–28 años', 'Mayor de 28 años'];
+    const ageCounts: Record<string, number> = {};
+    filteredData.forEach(item => {
+      const val = item.rango_edad;
+      if (val) ageCounts[val] = (ageCounts[val] || 0) + 1;
+    });
+    const ageDist = ageOrdinalOrder.map(label => ({
+      label,
+      value: ageCounts[label] || 0
+    }));
 
-    // Bloque 4: Empleabilidad Digital
-    const areasCertificacion = getChartData('areas_certificacion').filter(v => v.label !== 'No tengo ninguna certificación');
+    // --- SECCIÓN 2: EDUCACIÓN Y SITUACIÓN ACTUAL ---
+    const studiesOrdinalOrder = ['Primaria', 'Secundaria / media sin finalizar', 'Secundaria / media finalizada', 'Técnico / Tecnológico', 'Universitario', 'Posgrado'];
+    const studiesCounts: Record<string, number> = {};
+    filteredData.forEach(item => {
+      const val = item.nivel_estudios;
+      if (val) studiesCounts[val] = (studiesCounts[val] || 0) + 1;
+    });
+    const studiesDist = studiesOrdinalOrder.map(label => ({
+      label,
+      value: studiesCounts[label] || 0
+    }));
 
-    // Bloque 5: Emprendimiento Digital
-    const tieneEmprendimientoSi = data.filter(d => d.tiene_emprendimiento === 'Sí').length;
-    const tieneEmprendimientoNo = data.filter(d => d.tiene_emprendimiento === 'No').length;
+    const situacionActual = getProcessedChartData('situacion_actual');
+    const interesTrabajo = getProcessedChartData('interes_trabajo_digital');
+
+    // --- SECCIÓN 3: INTERESES ---
+    const lineasInteres = getProcessedChartData('lineas_interes');
+
+    // --- SECCIÓN 4: EMPLEABILIDAD DIGITAL ---
+    const areasCertificacion = getProcessedChartData('areas_certificacion').filter(v => v.label !== 'No tengo ninguna certificación');
+
+    // --- SECCIÓN 5: EMPRENDIMIENTO DIGITAL ---
+    const tieneEmprendimientoSi = filteredData.filter(d => d.tiene_emprendimiento === 'Sí').length;
+    const tieneEmprendimientoNo = filteredData.filter(d => d.tiene_emprendimiento === 'No').length;
     const tieneEmprendimientoDist = [
       { label: 'Sí', value: tieneEmprendimientoSi },
       { label: 'No', value: tieneEmprendimientoNo }
     ].filter(v => v.value > 0);
-    const temaEmprendimiento = getChartData('tema_emprendimiento');
-    const etapaEmprendimiento = getChartData('etapa_emprendimiento');
-    const alcanceEmprendimiento = getChartData('alcance_emprendimiento');
-    const barrerasEmprendimiento = getChartData('barreras_emprendimiento');
 
-    // Bloque 6: Política Pública Digital
-    const participacionPreviaSi = data.filter(d => d.participacion_previa === 'Sí').length;
-    const participacionPreviaNo = data.filter(d => d.participacion_previa === 'No').length;
+    const temaEmprendimiento = getProcessedChartData('tema_emprendimiento');
+    const etapaEmprendimiento = getProcessedChartData('etapa_emprendimiento');
+    const alcanceEmprendimiento = getProcessedChartData('alcance_emprendimiento');
+    const barrerasEmprendimiento = getProcessedChartData('barreras_emprendimiento');
+
+    // Filtered Entrepreneurship projects list (p18 names, p23 objectives, links)
+    const activeProjects = filteredData
+      .filter(item => item.tiene_emprendimiento === 'Sí' && item.nombre_emprendimiento)
+      .map(item => ({
+        name: item.nombre_emprendimiento,
+        theme: item.tema_emprendimiento,
+        stage: item.etapa_emprendimiento,
+        reach: item.alcance_emprendimiento,
+        objective: item.objetivo_emprendimiento || '',
+        links: item.enlaces_emprendimiento || 'no',
+        departamento: item.departamento || 'No especifica'
+      }));
+
+    // --- SECCIÓN 6: POLÍTICA PÚBLICA DIGITAL ---
+    const participacionPreviaSi = filteredData.filter(d => d.participacion_previa === 'Sí').length;
+    const participacionPreviaNo = filteredData.filter(d => d.participacion_previa === 'No').length;
     const participacionPreviaDist = [
       { label: 'Sí', value: participacionPreviaSi },
       { label: 'No', value: participacionPreviaNo }
     ].filter(v => v.value > 0);
-    const perteneceRedDist = getChartData('pertenece_red');
-    const temasPolitica = getChartData('temas_politica');
-    const formaParticipar = getChartData('forma_participar');
+
+    const perteneceRedDist = getProcessedChartData('pertenece_red');
+    const temasPolitica = getProcessedChartData('temas_politica');
+    const formaParticipar = getProcessedChartData('forma_participar');
+
+    // Redes juveniles/Organizaciones names
+    const activeOrgs = filteredData
+      .filter(item => item.pertenece_red === 'Sí — ¿cuál?' && item.cual_red)
+      .map(item => item.cual_red)
+      .filter((v, i, self) => self.indexOf(v) === i); // deduplicated
 
     // Actividad Diaria
     const dailyCounts: Record<string, number> = {};
-    data.forEach(item => {
+    filteredData.forEach(item => {
       if (item.createdAt) {
-        // Handle Firestore Timestamp or Date
-        const date = item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt.seconds * 1000);
+        const date = item.createdAt.toDate ? item.createdAt.toDate() : new Date((item.createdAt.seconds || item.createdAt._seconds) * 1000);
         const dateStr = date.toISOString().split('T')[0];
         dailyCounts[dateStr] = (dailyCounts[dateStr] || 0) + 1;
       }
@@ -173,62 +294,87 @@ export default function Dashboard() {
       .map(([date, count]) => ({ date, count }))
       .sort((a, b) => b.date.localeCompare(a.date));
 
+    // --- ENLACES DINÁMICOS DE REFERENCIA ---
+    const referralCounts: Record<string, number> = {
+      'goyn': 0,
+      'cora': 0,
+      'fedesoft': 0,
+      'cintel': 0,
+      'oit': 0,
+      'directo': 0
+    };
+
+    filteredData.forEach(item => {
+      let ref = item.referencia;
+      if (!ref) {
+        referralCounts['directo']++;
+      } else {
+        const cleanRef = ref.trim().toLowerCase();
+        if (cleanRef in referralCounts) {
+          referralCounts[cleanRef]++;
+        } else if (cleanRef === 'directo' || cleanRef === 'ninguno' || cleanRef === 'sin referente') {
+          referralCounts['directo']++;
+        } else {
+          referralCounts['directo']++;
+        }
+      }
+    });
+
+    const referralData = Object.entries(REFERRAL_LABELS).map(([key, label]) => ({
+      label,
+      value: referralCounts[key] || 0
+    }));
+
     return {
       total,
-      ageDist, zoneDist, groupsDist, generoDist,
-      nivelEstudios, situacionActual, interesTrabajo,
+      departamentoRaw, municipioRaw, zonaRaw, ageDist, groupsRaw, generoRaw, discapacidadRaw,
+      studiesDist, situacionActual, interesTrabajo,
       lineasInteres,
       areasCertificacion,
-      tieneEmprendimientoDist, temaEmprendimiento, etapaEmprendimiento, alcanceEmprendimiento, barrerasEmprendimiento,
-      participacionPreviaDist, perteneceRedDist, temasPolitica, formaParticipar,
-      dailyActivity
+      tieneEmprendimientoDist, temaEmprendimiento, etapaEmprendimiento, alcanceEmprendimiento, barrerasEmprendimiento, activeProjects,
+      participacionPreviaDist, perteneceRedDist, temasPolitica, formaParticipar, activeOrgs,
+      dailyActivity,
+      referralData
     };
-  }, [data]);
+  }, [filteredData]);
 
+  // Export to Excel handler
   const handleExportExcel = () => {
     setIsExporting(true);
     try {
-      // 1. Create mapping from variable name to actual question text
       const fieldMapping = QUESTIONS.reduce((acc, q) => {
         acc[q.variable] = q.text;
         return acc;
       }, {} as Record<string, string>);
 
-      // 2. Prepare data for Excel
       const excelData = data.map(submission => {
         const row: Record<string, any> = {};
         
-        // Add timestamp as the first column
         if (submission.createdAt) {
-          const date = submission.createdAt.toDate ? submission.createdAt.toDate() : new Date(submission.createdAt.seconds * 1000);
+          const date = submission.createdAt.toDate ? submission.createdAt.toDate() : new Date((submission.createdAt.seconds || submission.createdAt._seconds) * 1000);
           row['Fecha de Envío'] = date.toLocaleString();
         }
 
-        // Add each question using its human-readable text as header
         Object.keys(submission).forEach(key => {
-          if (key === 'createdAt' || key === 'userId') return; // Skip internal fields
+          if (key === 'createdAt' || key === 'userId') return;
           
           const header = fieldMapping[key] || key;
           let value = submission[key];
           
-          // Format arrays (multi-select) as comma-separated strings
           if (Array.isArray(value)) {
             value = value.join(', ');
           }
-          
           row[header] = value;
         });
 
         return row;
       });
 
-      // 3. Generate Excel file
       const worksheet = XLSX.utils.json_to_sheet(excelData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Caracterización");
       
-      // 4. Trigger download
-      const fileName = `Caracterizacion_Digital_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `Caracterizacion_Digital_${useMock ? 'SIMULADO_' : ''}${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(workbook, fileName);
     } catch (error) {
       console.error("Export error:", error);
@@ -238,11 +384,23 @@ export default function Dashboard() {
     }
   };
 
+  // Filtering projects list based on search bar
+  const searchedProjects = useMemo(() => {
+    if (!metrics?.activeProjects) return [];
+    if (!searchQuery) return metrics.activeProjects;
+    const queryLower = searchQuery.toLowerCase();
+    return metrics.activeProjects.filter(p => 
+      p.name.toLowerCase().includes(queryLower) ||
+      p.objective.toLowerCase().includes(queryLower) ||
+      p.departamento.toLowerCase().includes(queryLower)
+    );
+  }, [metrics?.activeProjects, searchQuery]);
+
   if (authChecking) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
-        <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-3xl border border-slate-100 shadow-sm max-w-sm text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin animate-duration-1000"></div>
+        <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm max-w-sm text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-slate-600 font-bold">Verificando credenciales...</p>
         </div>
       </div>
@@ -265,7 +423,7 @@ export default function Dashboard() {
                <img 
                  src="https://drive.google.com/uc?export=view&id=174vtmcqrDB0haU8p_G9CVfWZxAn3fOvn"
                  alt="OIT & UNFPA"
-                 className="h-9 object-contain referrerPolicy"
+                 className="h-9 object-contain"
                  referrerPolicy="no-referrer"
                />
              </div>
@@ -274,76 +432,18 @@ export default function Dashboard() {
              </div>
              <h2 className="text-xl font-black text-slate-900 tracking-tight mt-1">Acceso Administrativo</h2>
              <p className="text-xs font-semibold text-slate-500 leading-relaxed max-w-xs">
-               Este panel de administración y estadísticas contiene información protegida. Inicia sesión con una cuenta de Google autorizada.
+                Este panel de administración y estadísticas contiene información protegida. Inicia sesión con una cuenta de Google autorizada.
              </p>
           </div>
 
-          {/* Iframe detection & Error helpful banner */}
           <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 text-left space-y-3">
-            <div className="space-y-1">
-              <span className="text-xs font-black text-amber-800 flex items-center gap-1.5 uppercase tracking-wider">
-                <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-600" />
-                Guía de Solución de Problemas
-              </span>
-              <p className="text-[11px] font-medium text-amber-700 leading-relaxed">
-                Si encuentras problemas al iniciar sesión, aquí tienes cómo resolver los errores comunes:
-              </p>
-            </div>
-
-            <div className="space-y-3 pt-2.5 border-t border-amber-200/60">
-              <div>
-                <h4 className="text-[11px] font-black text-amber-900 flex items-center gap-1">
-                  <span>1. ¿El botón de Google no responde?</span>
-                </h4>
-                <p className="text-[10px] font-semibold text-amber-700 leading-relaxed mt-0.5">
-                  Si estás dentro de <strong>AI Studio</strong>, los navegadores bloquean las ventanas emergentes. Haz clic en <strong>"Abrir en nueva pestaña"</strong> a continuación.
-                </p>
-              </div>
-
-              <div>
-                <h4 className="text-[11px] font-black text-amber-900 flex items-center gap-1">
-                  <span>2. ¿El botón "Save" de Google está gris en Firebase?</span>
-                </h4>
-                <p className="text-[10px] font-semibold text-amber-700 leading-relaxed mt-0.5">
-                  El botón se queda gris porque el proveedor Google requiere un correo de asistencia visible en ese panel. Recuerda <strong>recargar la página con F5</strong> en la consola de Firebase para que detecte el correo de soporte general, abre la sección de edición de Google y selecciona tu correo en el menú desplegable de correo de asistencia del proyecto antes de guardar.
-                </p>
-              </div>
-
-              <div>
-                <h4 className="text-[11px] font-black text-amber-900 flex items-center gap-1">
-                  <span>3. ¡La clave definitiva! Dominios Autorizados (GitHub & Preview)</span>
-                </h4>
-                <p className="text-[10px] font-semibold text-amber-700 leading-relaxed mt-0.5">
-                  No necesitas activar el proveedor de GitHub (tener el proyecto en GitHub o desplegado allí no requiere activar inicio de sesión con cuenta de GitHub, ya que usas Google). Sin embargo, <strong>debes autorizar tu dominio de GitHub Pages y el de AI Studio</strong> en Firebase para que te permita iniciar sesión:
-                </p>
-                <ol className="text-[10px] font-bold text-amber-800 list-decimal pl-4.5 mt-1 space-y-1 leading-relaxed">
-                  <li>
-                    Abre los ajustes de dominios en:{' '}
-                    <a 
-                      href="https://console.firebase.google.com/project/gen-lang-client-0263538171/authentication/settings" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="underline text-blue-700 hover:text-blue-900 font-extrabold"
-                    >
-                      Ajustes de Firebase Auth (Settings)
-                    </a>
-                  </li>
-                  <li>
-                    Ve a la pestaña <strong>Ajustes (Settings)</strong> en la barra superior de Authentication y selecciona <strong>Dominios autorizados (Authorized domains)</strong> en el menú izquierdo.
-                  </li>
-                  <li>
-                    Haz clic en <strong>Agregar dominio (Add domain)</strong> y agrega los siguientes dominios:
-                    <ul className="list-disc pl-4 mt-0.5 font-semibold text-[9.5px] space-y-0.5 text-slate-700">
-                      <li><code>github.io</code> (para que funcione desde tu despliegue de GitHub)</li>
-                      <li><code>run.app</code> (para que funcione desde este entorno de pruebas de AI Studio)</li>
-                    </ul>
-                  </li>
-                  <li>
-                    Una vez agregados, ¡los inicios de sesión con Google funcionarán al instante en ambos entornos!
-                  </li>
-                </ol>
-              </div>
-            </div>
+            <span className="text-xs font-black text-amber-800 flex items-center gap-1.5 uppercase tracking-wider">
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              Dominios Autorizados (GitHub & Preview)
+            </span>
+            <p className="text-[10px] font-semibold text-amber-700 leading-relaxed">
+              Recuerda tener autorizados los dominios de <strong>run.app</strong> y <strong>github.io</strong> en la sección Autorizados de tu panel de Firebase Auth para que el pop-up de inicio de sesión con Google responda adecuadamente.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -371,74 +471,9 @@ export default function Dashboard() {
             </button>
 
             {authError && (
-              <div className="space-y-4">
-                <p className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100 text-left whitespace-pre-wrap break-all">
-                  {authError}
-                </p>
-
-                {authError.toLowerCase().includes('unauthorized-domain') && (
-                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-2xl text-left space-y-3">
-                    <h3 className="text-xs font-black text-blue-900 tracking-wider uppercase flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                      ¿Cómo solucionar este error?
-                    </h3>
-                    <p className="text-[11px] font-medium text-blue-700 leading-relaxed">
-                      El dominio actual de la aplicación no está autorizado en tu proyecto de Firebase. Sigue estos sencillos pasos para habilitarlo:
-                    </p>
-                    <ol className="text-[11px] font-semibold text-blue-800 list-decimal pl-4 space-y-1">
-                      <li>
-                        Abre la consola de Firebase en:{' '}
-                        <a 
-                          href="https://console.firebase.google.com/project/gen-lang-client-0263538171/authentication/settings" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="underline text-blue-600 hover:text-blue-800 font-extrabold break-all"
-                        >
-                          Configuración de Firebase Auth
-                        </a>
-                      </li>
-                      <li>
-                        Ve a la pestaña de <strong>Ajustes (Settings)</strong> y debajo busca la sección de <strong>Dominios autorizados (Authorized domains)</strong>.
-                      </li>
-                      <li>
-                        Haz clic en <strong>Añadir dominio (Add domain)</strong>.
-                      </li>
-                      <li>
-                        Agrega el dominio de desarrollo y el dominio público/compartido para que funcione en ambos entornos:
-                        <div className="mt-1.5 p-2 bg-white rounded-xl border border-blue-100 font-mono text-[9px] text-blue-900 space-y-1">
-                          <div className="flex justify-between items-center bg-blue-50/50 p-1 rounded">
-                            <span>ais-dev-xbzjmdscrgnx4a7w3qzx5i-676483839924.us-east1.run.app</span>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText('ais-dev-xbzjmdscrgnx4a7w3qzx5i-676483839924.us-east1.run.app');
-                                alert('Dominio de desarrollo copiado');
-                              }}
-                              className="text-[9px] bg-blue-600 text-white px-1.5 py-0.5 rounded hover:bg-blue-700 font-sans font-bold"
-                            >
-                              Copiar
-                            </button>
-                          </div>
-                          <div className="flex justify-between items-center bg-blue-50/50 p-1 rounded">
-                            <span>ais-pre-xbzjmdscrgnx4a7w3qzx5i-676483839924.us-east1.run.app</span>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText('ais-pre-xbzjmdscrgnx4a7w3qzx5i-676483839924.us-east1.run.app');
-                                alert('Dominio compartido copiado');
-                              }}
-                              className="text-[9px] bg-blue-600 text-white px-1.5 py-0.5 rounded hover:bg-blue-700 font-sans font-bold"
-                            >
-                              Copiar
-                            </button>
-                          </div>
-                        </div>
-                      </li>
-                    </ol>
-                    <p className="text-[10px] text-blue-600 italic">
-                      * Una vez agregados en Firebase, vuelve aquí y haz clic en "Acceder con Google" de nuevo y funcionará perfectamente.
-                    </p>
-                  </div>
-                )}
-              </div>
+              <p className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100 text-left whitespace-pre-wrap break-all">
+                {authError}
+              </p>
             )}
           </div>
 
@@ -447,7 +482,7 @@ export default function Dashboard() {
                <ArrowLeft className="w-3.5 h-3.5" />
                Volver al chatbot
              </Link>
-             <span>Encriptado SSL — OIT & UNFPA</span>
+             <span>Encriptado OIT & UNFPA</span>
           </div>
         </motion.div>
       </div>
@@ -457,8 +492,6 @@ export default function Dashboard() {
   if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-4 relative overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -470,7 +503,7 @@ export default function Dashboard() {
              </div>
              <h2 className="text-2xl font-black text-slate-900 tracking-tight">Acceso No Autorizado</h2>
              <p className="text-sm font-semibold text-slate-500 leading-relaxed">
-               La cuenta de Google <span className="text-red-600 font-extrabold break-all">{user.email}</span> no se encuentra en la lista de administradores permitidos para este proyecto.
+                La cuenta de Google <span className="text-red-650 font-extrabold break-all">{user.email}</span> no se encuentra en la lista de administradores permitidos para este proyecto.
              </p>
           </div>
 
@@ -481,10 +514,7 @@ export default function Dashboard() {
             >
               Cerrar Sesión / Usar otro correo
             </button>
-            <Link 
-              to="/" 
-              className="w-full inline-block bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold p-4 rounded-2xl transition-all"
-            >
+            <Link to="/" className="w-full inline-block bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold p-4 rounded-2xl transition-all">
               Ir al Chatbot
             </Link>
           </div>
@@ -493,238 +523,427 @@ export default function Dashboard() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-600 font-bold">Procesando datos territoriales...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-6 font-sans">
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center space-y-4 max-w-sm">
-          <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto">
-            <Search className="w-8 h-8" />
-          </div>
-          <h2 className="text-xl font-bold text-slate-900">No hay datos aún</h2>
-          <p className="text-slate-500 max-w-xs text-sm">Comienza la caracterización para ver los indicadores en tiempo real.</p>
-          <div className="flex flex-col gap-2 pt-2">
-            <Link to="/" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold text-center">Ir al Chatbot</Link>
-            <button onClick={handleSignOut} className="text-xs font-bold text-slate-400 hover:text-slate-600">Cerrar Sesión ({user.email})</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      <div className="max-w-7xl mx-auto p-4 md:p-10 space-y-12">
+      
+      {/* Top Warning banner for Illustrative / Sandbox status */}
+      {useMock && (
+        <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white font-serif px-4 py-2.5 text-center text-xs font-semibold flex items-center justify-center gap-2 relative z-50">
+          <Info className="w-4 h-4 text-white flex-shrink-0" />
+          <span>
+            Mostrando <strong>Datos Ilustrativos Avanzados (Simulación 60 registros)</strong> ya que la base de datos recién se inicializa.
+          </span>
+          {realEntriesExist && (
+            <button 
+              onClick={toggleMockData} 
+              className="bg-white/20 hover:bg-white/35 px-4 py-1 text-[10px] font-black uppercase rounded-lg ml-4 transition-all"
+            >
+              Cargar Reales
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
         
-        {/* Header Dashboard */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+        {/* Core Header */}
+        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-150 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+          
           <div className="flex items-center gap-5 relative z-10">
-            <div className="bg-blue-600 p-4 rounded-2xl shadow-xl shadow-blue-200 ring-4 ring-blue-50">
-              <LayoutDashboard className="w-7 h-7 text-white" />
+            <div className="bg-blue-605 bg-blue-600 p-4 rounded-2xl shadow-xl shadow-blue-200 ring-4 ring-blue-50 text-white">
+              <LayoutDashboard className="w-7 h-7" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tight">Panel de Indicadores</h1>
-              <p className="text-slate-500 font-medium flex items-center gap-2 mt-1">
+              <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Panel de Indicadores</h1>
+              <p className="text-slate-500 font-medium flex items-center gap-2 mt-1 text-sm">
                 <Globe className="w-4 h-4 text-blue-500" />
-                Caracterización Digital: Jóvenes del Caribe y Pacífico
+                Caracterización Territorial de Juventud Caribe y Pacífico Colombiano
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-4 relative z-10">
-            <div className="bg-slate-50 px-5 py-3 rounded-2xl border border-slate-200">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Total Caracterizados</span>
-              <span className="text-2xl font-black text-blue-600">{stats.total}</span>
-            </div>
 
-            <div className="hidden lg:flex flex-col text-right justify-center bg-slate-50 border border-slate-200 px-5 py-2.5 rounded-2xl">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Administrador</span>
-              <span className="text-xs font-black text-slate-700 block truncate max-w-[200px]">{user?.email}</span>
+          <div className="flex flex-wrap items-center gap-4 relative z-10">
+            {/* Real vs Mock live toggle */}
+            <button 
+              onClick={toggleMockData}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-2 transition-all"
+              title="Permite intercambiar entre los datos simulados cargados y los reales recibidos de internet."
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Ver: {useMock ? 'Simulado' : 'Producción Real'}</span>
+            </button>
+
+            {/* Region select filter */}
+            <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+              <button 
+                onClick={() => setRegionFilter('all')} 
+                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${regionFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Todas
+              </button>
+              <button 
+                onClick={() => setRegionFilter('caribe')} 
+                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${regionFilter === 'caribe' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Caribe
+              </button>
+              <button 
+                onClick={() => setRegionFilter('pacifico')} 
+                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${regionFilter === 'pacifico' ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Pacífico
+              </button>
             </div>
 
             <button 
               onClick={handleExportExcel}
-              disabled={isExporting}
-              className="flex items-center gap-2 px-6 py-3 text-sm font-bold bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50 cursor-pointer"
+              disabled={isExporting || !metrics?.total}
+              className="flex items-center gap-2 px-6 py-3 text-xs font-bold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-50 disabled:opacity-50 cursor-pointer"
             >
-              {isExporting ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Download className="w-4 h-4" />
-              )}
-              Exportar Excel
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>Exportar Excel</span>
             </button>
 
             <button 
               onClick={handleSignOut}
-              className="px-4 py-3 text-sm font-bold bg-slate-100 text-slate-700 rounded-2xl hover:bg-slate-200 transition-all cursor-pointer"
-              title="Cerrar Sesión"
+              className="px-4 py-3 text-xs font-bold bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all font-mono"
             >
-              Cerrar Sesión
+              Salir
             </button>
 
-            <Link to="/" className="px-6 py-3 text-sm font-bold bg-slate-900 text-white rounded-2xl hover:bg-black transition-all shadow-lg">
-              Volver
+            <Link to="/" className="px-5 py-3 text-xs font-bold bg-slate-950 text-white rounded-xl hover:bg-black transition-all">
+              Ir al Chat
             </Link>
           </div>
         </header>
 
-        {/* 1. PERFIL GENERAL */}
-        <SectionHeader title="BLOQUE 1: Perfil General" icon={<Users />} />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <ChartCard title="Rango de Edad">
-            <SimpleBarChart data={stats.ageDist} />
-          </ChartCard>
-          <ChartCard title="Distribución por Zona">
-            <PieChartUI data={stats.zoneDist} colors={['#3B82F6', '#10B981']} />
-          </ChartCard>
-          <ChartCard title="Grupos Priorizados">
-            <HorizontalBarChart data={stats.groupsDist} color="#8B5CF6" />
-          </ChartCard>
-          <ChartCard title="Identificación de Género">
-            <HorizontalBarChart data={stats.generoDist} color="#06B6D4" />
-          </ChartCard>
+        {/* Dynamic overall Metrics Cards */}
+        {metrics && (
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <KPIMiniCard title="Total Filtrado" value={metrics.total} desc="Encuestas registradas" color="border-l-blue-600" />
+            <KPIMiniCard title="Región Caribe" value={data.filter(x => CARIBE_DEPTS.includes(x.departamento)).length} desc="Jóvenes en el Caribe" color="border-l-amber-500" />
+            <KPIMiniCard title="Región Pacífico" value={data.filter(x => PACIFICO_DEPTS.includes(x.departamento)).length} desc="Jóvenes en el Pacífico" color="border-l-violet-600" />
+            <KPIMiniCard title="Porcentaje Mujeres" value={`${Math.round((data.filter(x => x.genero === 'Mujer').length / (data.length || 1)) * 100)}%`} desc="Participación femenina" color="border-l-pink-500" />
+            <KPIMiniCard title="Interés en Tech" value={`${Math.round((data.filter(x => x.interes_trabajo_digital && x.interes_trabajo_digital.startsWith('Sí')).length / (data.length || 1)) * 100)}%`} desc="De cara al empleo" color="border-l-emerald-500" />
+          </div>
+        )}
+
+        {/* Tab segmented selector */}
+        <div className="flex overflow-x-auto bg-white p-1.5 rounded-2xl border border-slate-200 gap-1.5 shadow-sm scrollbar-hide">
+          <TabButton active={activeTab === 'summary'} onClick={() => setActiveTab('summary')} label="Vista General & Transversal" />
+          <TabButton active={activeTab === 'demographics'} onClick={() => setActiveTab('demographics')} label="1. Demografía" />
+          <TabButton active={activeTab === 'education'} onClick={() => setActiveTab('education')} label="2 y 3. Educación, Trabajo & Ejes" />
+          <TabButton active={activeTab === 'employability'} onClick={() => setActiveTab('employability')} label="4. Empleabilidad" />
+          <TabButton active={activeTab === 'entrepreneurship'} onClick={() => setActiveTab('entrepreneurship')} label="5. Emprendimiento" />
+          <TabButton active={activeTab === 'policy'} onClick={() => setActiveTab('policy')} label="6. Política Pública" />
         </div>
 
-        {/* 2. EDUCACIÓN Y TRABAJO */}
-        <SectionHeader title="BLOQUE 2: Educación y Trabajo" icon={<BookOpen />} />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ChartCard title="Nivel de Estudios">
-            <HorizontalBarChart data={stats.nivelEstudios} color="#F59E0B" />
-          </ChartCard>
-          <ChartCard title="Situación Actual">
-            <HorizontalBarChart data={stats.situacionActual} color="#10B981" />
-          </ChartCard>
-          <ChartCard title="Interés en Trabajar en Tecnología">
-            <SimpleBarChart data={stats.interesTrabajo} color="#3B82F6" />
-          </ChartCard>
-        </div>
+        {/* Conditional Tab Rendering */}
+        {metrics && (
+          <div className="space-y-12">
+            
+            {/* TABS 1: RESUMEN Y VISTAS TRANSVERSALES */}
+            {activeTab === 'summary' && (
+              <TransversalViews data={filteredData} />
+            )}
 
-        {/* 3. LÍNEAS DE INTERÉS */}
-        <SectionHeader title="BLOQUE 3: Líneas de Interés Escogidas" icon={<Target />} />
-        <div className="grid grid-cols-1 gap-6">
-          <ChartCard title="Distribución por Líneas de Interés (Selección Múltiple)">
-            <HorizontalBarChart data={stats.lineasInteres} color="#EC4899" />
-          </ChartCard>
-        </div>
+            {/* TAB 2: DEMOGRAFÍA */}
+            {activeTab === 'demographics' && (
+              <div className="space-y-8">
+                
+                {/* DEPARTAMENTOS Y MUNICIPIOS */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Departamentos */}
+                  <ChartCard title="Distribución de Jóvenes por Departamento">
+                    <div className="space-y-4">
+                      <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-4">
+                        Distribución geográfica absoluta dentro de los departamentos del Caribe y Pacífico.
+                      </p>
+                      <div className="space-y-3.5 max-h-[380px] overflow-y-auto pr-2">
+                        {metrics.departamentoRaw.map((item, idx) => {
+                          const isCaribe = CARIBE_DEPTS.includes(item.label);
+                          const isPac = PACIFICO_DEPTS.includes(item.label);
+                          const tagBg = isCaribe ? 'bg-amber-50 text-amber-600 border-amber-200/50' : (isPac ? 'bg-violet-50 text-violet-600 border-violet-200/50' : 'bg-slate-50 text-slate-500');
+                          const percent = Math.round((item.value / metrics.total) * 100);
 
-        {/* 4. EMPLEABILIDAD DIGITAL */}
-        <SectionHeader title="BLOQUE 4: Empleabilidad Digital" icon={<GraduationCap />} />
-        <div className="grid grid-cols-1 gap-6">
-          <ChartCard title="Áreas con Certificaciones Técnicas / Tecnológicas">
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.areasCertificacion} margin={{ top: 20, right: 30, left: 40, bottom: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
-                  <XAxis 
-                    dataKey="label" 
-                    interval={0}
-                    angle={-15} 
-                    textAnchor="end"
-                    tick={{ fontSize: 10, fontWeight: 600, fill: '#64748b' }}
-                    height={80}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Bar dataKey="value" radius={[10, 10, 0, 0]}>
-                    {stats.areasCertificacion.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </ChartCard>
-        </div>
+                          return (
+                            <div key={idx} className="space-y-1">
+                              <div className="flex justify-between items-center text-xs font-bold text-slate-700">
+                                <span className="flex items-center gap-2">
+                                  <span className={`px-2 py-0.5 rounded-lg text-[9px] uppercase font-black border ${tagBg}`}>
+                                    {isCaribe ? 'Caribe' : (isPac ? 'Pacífico' : 'Región')}
+                                  </span>
+                                  {item.label}
+                                </span>
+                                <span>{item.value} ({percent}%)</span>
+                              </div>
+                              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden block">
+                                <div className={`h-full rounded-full ${isCaribe ? 'bg-amber-500' : 'bg-violet-500'}`} style={{ width: `${percent}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </ChartCard>
 
-        {/* 5. EMPRENDIMIENTO DIGITAL */}
-        <SectionHeader title="BLOQUE 5: Emprendimiento Digital" icon={<Zap />} />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ChartCard title="Desarrolla Emprendimiento">
-            <PieChartUI data={stats.tieneEmprendimientoDist} colors={['#10B981', '#EF4444']} hole innerRadius={40} />
-          </ChartCard>
-          <ChartCard title="Temáticas de Emprendimiento">
-            <HorizontalBarChart data={stats.temaEmprendimiento} color="#8B5CF6" />
-          </ChartCard>
-          <ChartCard title="Etapa de la Iniciativa">
-            <SimpleBarChart data={stats.etapaEmprendimiento} color="#F59E0B" />
-          </ChartCard>
-          <ChartCard title="Alcance Territorial">
-            <PieChartUI data={stats.alcanceEmprendimiento} colors={['#3B82F6', '#06B6D4', '#8B5CF6']} />
-          </ChartCard>
-          <ChartCard title="Barreras Enfrentadas (Multiselección)" className="lg:col-span-2">
-            <HorizontalBarChart data={stats.barrerasEmprendimiento} color="#EF4444" />
-          </ChartCard>
-        </div>
+                  {/* Municipios */}
+                  <ChartCard title="Top 10 Municipios de Residencia">
+                    <HorizontalBarChart data={metrics.municipioRaw} color="#3B82F6" />
+                  </ChartCard>
+                </div>
 
-        {/* 6. POLÍTICA PÚBLICA DIGITAL */}
-        <SectionHeader title="BLOQUE 6: Política Pública Digital" icon={<ShieldCheck />} />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ChartCard title="Participación Ciudadana Previa">
-            <PieChartUI data={stats.participacionPreviaDist} colors={['#10B981', '#EF4444']} hole innerRadius={45} />
-          </ChartCard>
-          <ChartCard title="Pertenencia a Organizaciones / Redes">
-            <PieChartUI data={stats.perteneceRedDist} colors={['#3B82F6', '#F59E0B']} />
-          </ChartCard>
-          <ChartCard title="Temáticas de Interés de Política Pública">
-            <HorizontalBarChart data={stats.temasPolitica} color="#06B6D4" />
-          </ChartCard>
-          <ChartCard title="Cómo les gustaría contribuir o participar (Multiselección)" className="lg:col-span-3">
-            <HorizontalBarChart data={stats.formaParticipar} color="#8B5CF6" />
-          </ChartCard>
-        </div>
+                {/* ZONA, RANGO EDAD, GÉNERO */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <ChartCard title="Ubicación de Zona (Rural/Urbana)">
+                    <PieChartUI data={metrics.zonaRaw} colors={['#3B82F6', '#10B981']} hole innerRadius={45} />
+                  </ChartCard>
 
-        {/* 6. ACTIVIDAD DIARIA */}
-        <SectionHeader title="BLOQUE 6: Actividad Diaria" icon={<Calendar />} />
-        <div className="grid grid-cols-1 gap-6">
-           <ChartCard title="Histórico de Encuestas por Día">
+                  <ChartCard title="Distribución por Rango de Edad">
+                    <VerticalBarChart data={metrics.ageDist} color="#F59E0B" />
+                  </ChartCard>
+
+                  <ChartCard title="Identificación de Género">
+                    <PieChartUI data={metrics.generoRaw} colors={['#EC4899', '#3B82F6', '#C084FC', '#94A3B8']} />
+                  </ChartCard>
+                </div>
+
+                {/* GRUPOS VULNERABLES Y DISCAPACIDAD */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <ChartCard title="Participación de Grupos Priorizados (Multiselección)">
+                    <HorizontalBarChart data={metrics.groupsRaw} color="#8B5CF6" />
+                  </ChartCard>
+
+                  <ChartCard title="Tipo de Discapacidad Reportada (Condicional)">
+                    {metrics.discapacidadRaw.length > 0 ? (
+                      <HorizontalBarChart data={metrics.discapacidadRaw} color="#EF4444" />
+                    ) : (
+                      <div className="h-full flex items-center justify-center p-8 border-2 border-dashed rounded-3xl text-slate-400 font-semibold text-xs text-center leading-relaxed">
+                        No hay reportes de discapacidad entre los jóvenes filtrados.
+                      </div>
+                    )}
+                  </ChartCard>
+                </div>
+
+              </div>
+            )}
+
+            {/* TAB 3: EDUCACIÓN, EMPLEO E INTERESES */}
+            {activeTab === 'education' && (
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <ChartCard title="Nivel de Estudios Alcanzado">
+                    <VerticalBarChart data={metrics.studiesDist} color="#F59E0B" />
+                  </ChartCard>
+
+                  <ChartCard title="Situación Ocupacional Actual">
+                    <HorizontalBarChart data={metrics.situacionActual} color="#10B981" />
+                  </ChartCard>
+
+                  <ChartCard title="Interés Profesional en Tecnología">
+                    <VerticalBarChart data={metrics.interesTrabajo} color="#3B82F6" />
+                  </ChartCard>
+                </div>
+
+                <ChartCard title="Líneas Estratégicas de Participación Seleccionadas (Multiselección)">
+                  <HorizontalBarChart data={metrics.lineasInteres} color="#EC4899" />
+                </ChartCard>
+              </div>
+            )}
+
+            {/* TAB 4: EMPLEABILIDAD */}
+            {activeTab === 'employability' && (
+              <div className="space-y-8">
+                <ChartCard title="Áreas de Certificación Técnica o Profesional en Tecnología">
+                  <p className="text-xs font-semibold text-slate-500 mb-6 leading-relaxed max-w-xl">
+                    Sectores digitales específicos donde los jóvenes cuentan con un título comprobable, listado para priorizar capacitaciones y ofertas de empleo.
+                  </p>
+                  <HorizontalBarChart data={metrics.areasCertificacion} color="#06B6D4" height={345} />
+                </ChartCard>
+              </div>
+            )}
+
+            {/* TAB 5: EMPRENDIMIENTO */}
+            {activeTab === 'entrepreneurship' && (
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <ChartCard title="Fórmula de Emprendimiento" className="lg:col-span-1">
+                    <PieChartUI data={metrics.tieneEmprendimientoDist} colors={['#10B981', '#EF4444']} hole innerRadius={40} />
+                  </ChartCard>
+
+                  <ChartCard title="Temáticas de los Negocios" className="lg:col-span-1">
+                    <HorizontalBarChart data={metrics.temaEmprendimiento} color="#8B5CF6" />
+                  </ChartCard>
+
+                  <ChartCard title="Etapa de Incubación" className="lg:col-span-1">
+                    <VerticalBarChart data={metrics.etapaEmprendimiento} color="#F59E0B" />
+                  </ChartCard>
+
+                  <ChartCard title="Alcance Geográfico del Negocio" className="lg:col-span-1">
+                    <PieChartUI data={metrics.alcanceEmprendimiento} colors={['#3B82F6', '#06B6D4', '#8B5CF6']} />
+                  </ChartCard>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  {/* Barreras */}
+                  <div className="lg:col-span-7">
+                    <ChartCard title="Barreras en el Emprendimiento Digital">
+                      <HorizontalBarChart data={metrics.barrerasEmprendimiento} color="#EF4444" />
+                    </ChartCard>
+                  </div>
+
+                  {/* Directorio de Iniciativas con Enlaces */}
+                  <div className="lg:col-span-5 flex flex-col">
+                    <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex-1 flex flex-col">
+                      <div className="border-l-4 border-blue-600 pl-4 mb-6 flex justify-between items-center">
+                        <div>
+                          <h3 className="text-lg font-black text-slate-800">Directorio de Iniciativas</h3>
+                          <p className="text-slate-500 text-xs font-semibold mt-0.5">Nombres y objetivos reportados</p>
+                        </div>
+                      </div>
+
+                      {/* Search project */}
+                      <div className="relative mb-4">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        <input 
+                          type="text" 
+                          placeholder="Buscar iniciativa..." 
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2 text-xs border border-slate-250 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 placeholder:text-slate-400 block"
+                        />
+                      </div>
+
+                      <div className="flex-1 overflow-y-auto max-h-[350px] space-y-3.5 pr-1.5 scrollbar-hide">
+                        {searchedProjects.map((p, idx) => (
+                          <div key={idx} className="p-4 bg-slate-50/60 border border-slate-150 rounded-2xl hover:bg-slate-50 transition-colors">
+                            <div className="flex items-start justify-between gap-4">
+                              <h4 className="text-xs font-black text-slate-800 leading-snug">{p.name}</h4>
+                              <span className="text-[10px] font-black bg-blue-500 text-white px-2 py-0.5 rounded-lg uppercase flex-shrink-0">
+                                {p.stage}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-400 font-extrabold mt-1">
+                              Sede: {p.departamento} | Temas: {p.theme ? (Array.isArray(p.theme) ? p.theme.join(', ') : p.theme) : 'N/A'}
+                            </p>
+                            <p className="text-xs font-medium text-slate-600 leading-relaxed mt-2 italic bg-white p-3 rounded-lg border border-slate-100">
+                              "{p.objective}"
+                            </p>
+                            
+                            {p.links && p.links.toLowerCase() !== 'no' && (
+                              <div className="mt-3 flex justify-end">
+                                <a 
+                                  href={p.links.startsWith('http') ? p.links : `https://${p.links}`}
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 text-[10px] font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                                >
+                                  <Link2 className="w-3.5 h-3.5" />
+                                  <span>Visitar Redes / Enlace</span>
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+
+                        {searchedProjects.length === 0 && (
+                          <p className="text-center text-slate-400 text-xs italic py-8">No se encontraron iniciativas.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* TAB 6: POLÍTICA PÚBLICA */}
+            {activeTab === 'policy' && (
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <ChartCard title="Participación Ciudadana Previa">
+                    <PieChartUI data={metrics.participacionPreviaDist} colors={['#10B981', '#EF4444']} hole innerRadius={45} />
+                  </ChartCard>
+
+                  <ChartCard title="Pertenencia a Redes Juveniles / Colectivos">
+                    <PieChartUI data={metrics.perteneceRedDist} colors={['#3B82F6', '#EF4444']} />
+                  </ChartCard>
+
+                  {/* Organizaciones/Colectivos list */}
+                  <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col h-full justify-between">
+                    <div className="border-l-4 border-emerald-600 pl-4 mb-4">
+                      <h3 className="text-lg font-black text-slate-800">Redes y Organizaciones</h3>
+                      <p className="text-slate-500 text-xs font-semibold mt-0.5">Identificadas por jóvenes encuestados</p>
+                    </div>
+                    <div className="flex-1 overflow-y-auto max-h-[180px] space-y-2 pr-1 scrollbar-hide py-3">
+                      {metrics.activeOrgs.map((org, index) => (
+                        <div key={index} className="px-3 py-2 bg-slate-50 border border-slate-150 rounded-xl text-xs font-extrabold text-slate-600">
+                          {org}
+                        </div>
+                      ))}
+                      {metrics.activeOrgs.length === 0 && (
+                        <p className="text-slate-400 italic text-xs py-8 text-center">Sin organizaciones reportadas en estas respuestas.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <ChartCard title="Temáticas de Interés de Política Pública Digital">
+                    <HorizontalBarChart data={metrics.temasPolitica} color="#06B6D4" />
+                  </ChartCard>
+
+                  <ChartCard title="Formas de Participación Preferidas por la Juventud">
+                    <HorizontalBarChart data={metrics.formaParticipar} color="#8B5CF6" />
+                  </ChartCard>
+                </div>
+              </div>
+            )}
+
+            {/* ACTIVIDAD DIARIA */}
+            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+              <div className="border-l-4 border-slate-600 pl-4 mb-6">
+                <h3 className="text-lg font-black text-slate-800">Historial de Actividad</h3>
+                <p className="text-slate-500 text-xs font-semibold mt-0.5">Historial cronológico de registros de encuestas territoriales</p>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-100">
-                      <th className="py-4 px-4 text-xs font-black uppercase tracking-widest text-slate-400">Fecha</th>
-                      <th className="py-4 px-4 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Cantidad de Encuestas</th>
+                    <tr className="border-b border-slate-150">
+                      <th className="py-4 px-4 text-[10px] font-black uppercase tracking-wider text-slate-400">Fecha de Caracterización</th>
+                      <th className="py-4 px-4 text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Encuestas Completadas</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {stats.dailyActivity.map((day: any) => (
+                    {metrics.dailyActivity.map((day: any) => (
                       <tr key={day.date} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                        <td className="py-4 px-4 text-sm font-bold text-slate-700">{day.date}</td>
+                        <td className="py-4 px-4 text-xs font-black text-slate-700">{day.date}</td>
                         <td className="py-4 px-4 text-sm font-black text-blue-600 text-right">{day.count}</td>
                       </tr>
                     ))}
-                    {stats.dailyActivity.length === 0 && (
+                    {metrics.dailyActivity.length === 0 && (
                       <tr>
-                        <td colSpan={2} className="py-8 text-center text-slate-400 italic text-sm">No hay actividad registrada</td>
+                        <td colSpan={2} className="py-8 text-center text-slate-400 italic text-xs">No hay actividad completada todavía.</td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
-           </ChartCard>
-        </div>
+            </div>
 
-        <footer className="pt-10 text-center text-slate-400 text-sm border-t border-slate-100 flex flex-col items-center gap-4">
+          </div>
+        )}
+
+        <footer className="pt-10 text-center text-slate-400 text-xs border-t border-slate-100 flex flex-col items-center gap-4">
           <img 
             src="https://drive.google.com/uc?export=view&id=174vtmcqrDB0haU8p_G9CVfWZxAn3fOvn" 
             alt="OIT & UNFPA"
             className="h-10 grayscale opacity-50"
+            referrerPolicy="no-referrer"
           />
-          <p>© 2024 Observatorio de Caracterización Digital - OIT & UNFPA Colombia</p>
+          <p>© 2026 Observatorio de Caracterización Digital - Naciones Unidas OIT & UNFPA Colombia</p>
         </footer>
 
       </div>
@@ -733,127 +952,112 @@ export default function Dashboard() {
 }
 
 // UI Mini Components
-function SectionHeader({ title, icon }: any) {
+function KPIMiniCard({ title, value, desc, color }: { title: string; value: any; desc: string; color: string }) {
   return (
-    <div className="flex items-center gap-3 pt-6">
-      <div className="p-2 bg-slate-200 text-slate-600 rounded-lg">
-        {icon}
-      </div>
-      <h2 className="text-xl font-bold uppercase tracking-wider text-slate-500">{title}</h2>
+    <div className={`bg-white p-5 rounded-2xl border border-slate-200 border-l-4 shadow-sm flex flex-col justify-between ${color}`}>
+      <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">{title}</span>
+      <span className="text-xl md:text-2xl font-black text-slate-800 block mt-2">{value}</span>
+      <span className="text-[10px] font-medium text-slate-500 block mt-1 leading-snug">{desc}</span>
     </div>
   );
 }
 
-function ChartCard({ title, children, className }: any) {
+function TabButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`px-4 py-3 rounded-xl text-xs font-black whitespace-nowrap transition-all focus:outline-none ${
+        active 
+          ? 'bg-blue-600 text-white shadow-sm' 
+          : 'bg-slate-50 text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function ChartCard({ title, children, className, height = 250 }: { title: string; children: React.ReactNode; className?: string; height?: number }) {
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className={cn("bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col", className)}
+      className={`bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border border-slate-150 flex flex-col ${className || ''}`}
     >
-      <h3 className="text-lg font-black text-slate-800 mb-8 border-l-4 border-blue-600 pl-4 leading-tight">{title}</h3>
-      <div className="flex-1 w-full min-h-[200px]">
+      <h3 className="text-base font-black text-slate-800 mb-6 border-l-4 border-blue-600 pl-4 leading-none">{title}</h3>
+      <div className="flex-1 w-full" style={{ minHeight: `${height}px`, maxHeight: `${height + 100}px` }}>
         {children}
       </div>
     </motion.div>
   );
 }
 
-function KPICard({ label, value, sublabel, color, icon }: any) {
-  return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.9 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      className={cn("p-8 rounded-[2.5rem] flex flex-col gap-3 relative overflow-hidden", color)}
-    >
-      <div className="absolute top-0 right-0 p-4 opacity-10">
-        {icon && <div className="w-20 h-20">{icon}</div>}
-      </div>
-      <p className="text-sm font-bold uppercase tracking-widest opacity-80">{label}</p>
-      <p className="text-5xl font-black">{value}</p>
-      <p className="text-xs font-semibold opacity-70 leading-relaxed max-w-[200px]">{sublabel}</p>
-    </motion.div>
-  );
-}
+// Recharts wrappers
+const CHART_TOOLTIP_STYLE = { 
+  borderRadius: '1.25rem', 
+  border: 'none', 
+  boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.05)', 
+  fontFamily: 'Inter, system-ui, sans-serif',
+  fontSize: '11px',
+  fontWeight: '600'
+};
 
-function StatusMiniCard({ label, percent, desc }: any) {
-  return (
-    <div className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</span>
-        <span className="text-xs font-bold text-blue-600">{percent}%</span>
-      </div>
-      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-        <motion.div 
-          initial={{ width: 0 }}
-          whileInView={{ width: `${percent}%` }}
-          className="h-full bg-blue-600"
-        />
-      </div>
-      <p className="text-[9px] font-medium text-slate-500 italic">{desc}</p>
-    </div>
-  );
-}
-
-// Chart Abstractions
-function SimpleBarChart({ data, color = '#3B82F6' }: any) {
+function VerticalBarChart({ data, color }: { data: any[]; color: string }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
         <XAxis 
           dataKey="label" 
           axisLine={false} 
           tickLine={false} 
-          tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }} 
+          tick={{ fontSize: 9, fontWeight: 700, fill: '#64748b' }} 
         />
-        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} />
-        <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: 'none' }} />
-        <Bar dataKey="value" fill={color} radius={[6, 6, 0, 0]} barSize={30} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#64748b' }} />
+        <Tooltip cursor={{ fill: 'transparent' }} contentStyle={CHART_TOOLTIP_STYLE} />
+        <Bar dataKey="value" fill={color} radius={[6, 6, 0, 0]} barSize={25} />
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
-function HorizontalBarChart({ data, color = '#3B82F6' }: any) {
+function HorizontalBarChart({ data, color, height }: { data: any[]; color: string; height?: number }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart 
-        data={data.slice(0, 8)} 
+        data={data} 
         layout="vertical" 
-        margin={{ top: 0, right: 30, left: 40, bottom: 0 }}
+        margin={{ top: 10, right: 20, left: 30, bottom: 5 }}
       >
-        <Tooltip 
-           cursor={{ fill: 'transparent' }}
-           contentStyle={{ borderRadius: '1rem', border: 'none' }}
-        />
+        <CartesianGrid strokeDasharray="3 3" horizontal={false} strokeOpacity={0.1} />
         <XAxis type="number" hide />
         <YAxis 
           dataKey="label" 
           type="category" 
           axisLine={false} 
           tickLine={false} 
-          tick={{ fontSize: 9, fontWeight: 500, fill: '#64748b' }}
-          width={100}
+          tick={{ fontSize: 9, fontWeight: 700, fill: '#475569' }}
+          width={110}
         />
+        <Tooltip cursor={{ fill: 'transparent' }} contentStyle={CHART_TOOLTIP_STYLE} />
         <Bar dataKey="value" fill={color} radius={[0, 6, 6, 0]} barSize={12} />
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
-function PieChartUI({ data, colors = COLORS, hole = false, innerRadius = 0 }: any) {
+function PieChartUI({ data, colors, hole = false, innerRadius = 0 }: { data: any[]; colors: string[]; hole?: boolean; innerRadius?: number }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
         <Pie
           data={data}
           cx="50%"
-          cy="50%"
+          cy="45%"
           innerRadius={innerRadius}
-          outerRadius={80}
-          paddingAngle={hole ? 5 : 0}
+          outerRadius={70}
+          paddingAngle={hole ? 4 : 0}
           dataKey="value"
           nameKey="label"
         >
@@ -861,17 +1065,13 @@ function PieChartUI({ data, colors = COLORS, hole = false, innerRadius = 0 }: an
             <Cell key={`cell-${index}`} fill={colors[index % colors.length]} stroke="none" />
           ))}
         </Pie>
-        <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none' }} />
+        <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
         <Legend 
-           verticalAlign="bottom" 
-           iconType="circle" 
-           formatter={(value) => <span className="text-[10px] font-bold text-slate-500 uppercase">{value}</span>}
+          verticalAlign="bottom" 
+          iconType="circle" 
+          formatter={(value) => <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">{value}</span>}
         />
       </PieChart>
     </ResponsiveContainer>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }

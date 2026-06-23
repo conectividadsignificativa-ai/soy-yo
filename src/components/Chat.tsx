@@ -11,6 +11,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Link } from 'react-router-dom';
 import { BADGES, calculateLevel, Badge } from '../types/gamification';
+import { getReferralCode } from '../utils/referral';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -85,6 +86,8 @@ export default function Chat() {
   useEffect(() => {
     const welcome = async () => {
       setIsTyping(true);
+      // Capture and persist referral code on landing
+      getReferralCode();
       
       try {
         if (!auth.currentUser) {
@@ -335,7 +338,8 @@ Al diligenciar este formulario, autorizas el envío de información relacionada 
       const payload: any = {
         ...finalAnswers,
         createdAt: serverTimestamp(),
-        userId: auth.currentUser.uid
+        userId: auth.currentUser.uid,
+        referencia: getReferralCode() || 'Directo'
       };
 
       // Ensure required fields for rules are present

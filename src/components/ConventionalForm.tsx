@@ -22,6 +22,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { BADGES, calculateLevel, Badge } from '../types/gamification';
+import { getReferralCode } from '../utils/referral';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -83,6 +84,8 @@ export default function ConventionalForm() {
   
   useEffect(() => {
     const init = async () => {
+      // Capture and persist referral code on landing
+      getReferralCode();
       try {
         if (!auth.currentUser) {
           const userCred = await signInAnonymously(auth);
@@ -203,7 +206,8 @@ export default function ConventionalForm() {
         ...answers,
         createdAt: serverTimestamp(),
         userId: auth.currentUser.uid,
-        interfaceType: 'standard_form'
+        interfaceType: 'standard_form',
+        referencia: getReferralCode() || 'Directo'
       };
 
       if (!payload.nombre || !payload.email) {
