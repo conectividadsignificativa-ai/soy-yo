@@ -32,6 +32,7 @@ export default function TransversalViews({ data }: TransversalViewsProps) {
       'fedesoft': 'Fedesoft',
       'cintel': 'Cintel',
       'oit': 'OIT',
+      'biznation': 'BizNation',
       'directo': 'Directo (Estándar)'
     };
 
@@ -41,6 +42,7 @@ export default function TransversalViews({ data }: TransversalViewsProps) {
       'fedesoft': 0,
       'cintel': 0,
       'oit': 0,
+      'biznation': 0,
       'directo': 0
     };
 
@@ -317,31 +319,39 @@ export default function TransversalViews({ data }: TransversalViewsProps) {
               </p>
               
               <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
-                {[
-                  { id: 'goyn', name: 'GOYN', url: 'https://conectividadsignificativa-ai.github.io/soy-yo/#/?ref=goyn' },
-                  { id: 'cora', name: 'CORA', url: 'https://conectividadsignificativa-ai.github.io/soy-yo/#/?ref=cora' },
-                  { id: 'fedesoft', name: 'Fedesoft', url: 'https://conectividadsignificativa-ai.github.io/soy-yo/#/?ref=fedesoft' },
-                  { id: 'cintel', name: 'Cintel', url: 'https://conectividadsignificativa-ai.github.io/soy-yo/#/?ref=cintel' },
-                  { id: 'oit', name: 'OIT', url: 'https://conectividadsignificativa-ai.github.io/soy-yo/#/?ref=oit' },
-                  { id: 'estandar', name: 'Enlace Estándar', url: 'https://conectividadsignificativa-ai.github.io/soy-yo/#/' }
-                ].map((linkObj) => (
-                  <div key={linkObj.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <span className="text-[10px] font-black uppercase text-teal-600 block">{linkObj.name}</span>
-                      <p className="text-xs font-mono text-slate-500 truncate mt-0.5">{linkObj.url}</p>
+                {(() => {
+                  const currentBase = window.location.origin + window.location.pathname;
+                  const cleanBase = currentBase.endsWith('/') ? currentBase : currentBase + '/';
+                  
+                  const links = [
+                    { id: 'goyn', name: 'GOYN', url: `${cleanBase}#/?ref=goyn` },
+                    { id: 'cora', name: 'CORA', url: `${cleanBase}#/?ref=cora` },
+                    { id: 'fedesoft', name: 'Fedesoft', url: `${cleanBase}#/?ref=fedesoft` },
+                    { id: 'cintel', name: 'Cintel', url: `${cleanBase}#/?ref=cintel` },
+                    { id: 'oit', name: 'OIT', url: `${cleanBase}#/?ref=oit` },
+                    { id: 'biznation', name: 'BizNation', url: `${cleanBase}#/?ref=biznation` },
+                    { id: 'estandar', name: 'Enlace Estándar', url: `${cleanBase}#/?ref=` }
+                  ];
+
+                  return links.map((linkObj) => (
+                    <div key={linkObj.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-black uppercase text-teal-600 block">{linkObj.name}</span>
+                        <p className="text-xs font-mono text-slate-500 truncate mt-0.5">{linkObj.url}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(linkObj.url);
+                          alert(`¡Enlace de ${linkObj.name} copiado al portapapeles!`);
+                        }}
+                        className="p-2 bg-white hover:bg-slate-150 border border-slate-200 rounded-lg text-slate-500 hover:text-teal-600 transition-colors shadow-sm cursor-pointer flex-shrink-0"
+                        title="Copiar enlace"
+                      >
+                        <Link2 className="w-4 h-4" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(linkObj.url);
-                        alert(`¡Enlace de ${linkObj.name} copiado al portapapeles!`);
-                      }}
-                      className="p-2 bg-white hover:bg-slate-150 border border-slate-200 rounded-lg text-slate-500 hover:text-teal-600 transition-colors shadow-sm cursor-pointer flex-shrink-0"
-                      title="Copiar enlace"
-                    >
-                      <Link2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </div>
           </div>

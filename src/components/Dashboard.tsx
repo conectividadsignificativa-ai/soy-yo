@@ -26,6 +26,7 @@ const REFERRAL_LABELS: Record<string, string> = {
   'fedesoft': 'Fedesoft',
   'cintel': 'Cintel',
   'oit': 'OIT',
+  'biznation': 'BizNation',
   'directo': 'Directo (Estándar)'
 };
 
@@ -301,6 +302,7 @@ export default function Dashboard() {
       'fedesoft': 0,
       'cintel': 0,
       'oit': 0,
+      'biznation': 0,
       'directo': 0
     };
 

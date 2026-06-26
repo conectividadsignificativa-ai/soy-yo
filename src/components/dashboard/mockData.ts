@@ -110,7 +110,7 @@ export const generateMockSubmissions = () => {
 
     const activeEmp = hasEmpr ? yesNo[Math.floor(Math.random() * 1.5)] : 'No';
 
-    const referralOptions = ['goyn', 'cora', 'fedesoft', 'cintel', 'oit', 'Directo'];
+    const referralOptions = ['goyn', 'cora', 'fedesoft', 'cintel', 'oit', 'biznation', 'Directo'];
     const randomReferral = referralOptions[Math.floor(Math.random() * referralOptions.length)];
 
     return {
