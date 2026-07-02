@@ -246,18 +246,18 @@ export default function ConventionalForm() {
 
   if (isComplete) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-2xl w-full bg-white rounded-[2.5rem] shadow-2xl p-12 text-center space-y-8 border border-slate-100"
+          className="max-w-2xl w-full bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl p-6 md:p-12 text-center space-y-8 border border-slate-100 dark:border-slate-800"
         >
-          <div className="w-24 h-24 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+          <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
             <Sparkles className="w-12 h-12" />
           </div>
           <div className="space-y-4">
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">¡Muchas gracias por participar!</h1>
-            <p className="text-slate-500 text-lg leading-relaxed">
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">¡Muchas gracias por participar!</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-base md:text-lg leading-relaxed">
               Tu participación es muy importante para fortalecer iniciativas de transformación digital en Colombia. 
               La información que compartiste será tratada de forma confidencial por la OIT y el UNFPA.
             </p>
@@ -265,13 +265,13 @@ export default function ConventionalForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
             <button 
               onClick={() => navigate('/')} 
-              className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+              className="px-8 py-4 bg-blue-600 dark:bg-blue-700 text-white rounded-2xl font-bold hover:bg-blue-700 dark:hover:bg-blue-600 transition-all shadow-lg shadow-blue-200 dark:shadow-none cursor-pointer"
             >
               Volver al Inicio
             </button>
             <button 
               onClick={() => navigate('/stats')} 
-              className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition-all shadow-lg"
+              className="px-8 py-4 bg-slate-900 dark:bg-slate-800 text-white rounded-2xl font-bold hover:bg-black dark:hover:bg-slate-950 transition-all shadow-lg cursor-pointer"
             >
               Ver Estadísticas
             </button>
@@ -282,30 +282,30 @@ export default function ConventionalForm() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-20">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex items-center justify-between shadow-sm">
+      <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="bg-blue-600 p-2 rounded-xl">
+          <div className="bg-blue-600 dark:bg-blue-700 p-2 rounded-xl">
             <ClipboardList className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="font-black text-slate-900 tracking-tight leading-none">Formulario Convencional</h1>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Caracterización Digital</p>
+            <h1 className="font-black text-slate-900 dark:text-white tracking-tight leading-none">Formulario Convencional</h1>
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Caracterización Digital</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="hidden sm:flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+          <div className="hidden sm:flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-700">
             <Trophy className="w-4 h-4 text-yellow-500" />
-            <span className="text-xs font-black text-slate-700">{points} pts</span>
+            <span className="text-xs font-black text-slate-700 dark:text-slate-300">{points} pts</span>
           </div>
-          <Link to="/" className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all">
+          <Link to="/" className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-slate-800 rounded-xl hover:bg-blue-100 dark:hover:bg-slate-700 transition-all">
             <MessageSquare className="w-4 h-4" />
             Chatbot
           </Link>
         </div>
         {/* Progress Bar */}
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100">
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-850">
           <motion.div 
             className="h-full bg-blue-600"
             animate={{ width: `${((currentStepIndex + 1) / sections.length) * 100}%` }}
@@ -357,8 +357,8 @@ export default function ConventionalForm() {
 
         {/* Section Title */}
         <div className="space-y-2">
-           <span className="text-xs font-black text-blue-600 uppercase tracking-[0.2em]">Sección {currentStepIndex + 1} de {sections.length}</span>
-           <h2 className="text-4xl font-black text-slate-900 tracking-tight">{currentSection}</h2>
+           <span className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em]">Sección {currentStepIndex + 1} de {sections.length}</span>
+           <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{currentSection}</h2>
         </div>
 
         {/* Form Questions */}
@@ -373,11 +373,11 @@ export default function ConventionalForm() {
             >
               {visibleQuestions.map((q) => (
                 <div key={q.id} className="space-y-4">
-                  <label className="block text-lg font-bold text-slate-800 leading-snug">
+                  <label className="block text-lg font-bold text-slate-800 dark:text-slate-200 leading-snug">
                     {q.text}
                   </label>
                   
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
                     <FormInput 
                       question={q} 
                       value={answers[q.variable]} 
@@ -430,9 +430,9 @@ export default function ConventionalForm() {
         </div>
 
         {error && (
-          <div className="p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 flex items-center gap-3 text-sm font-bold">
-            <AlertCircle className="w-5 h-5" />
-            {error}
+          <div className="p-4 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-2xl border border-red-100 dark:border-red-900/30 flex items-center gap-3 text-sm font-bold">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <span>{error}</span>
           </div>
         )}
       </main>
@@ -445,22 +445,22 @@ export default function ConventionalForm() {
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
-              className="bg-white rounded-[2.5rem] shadow-2xl p-8 max-w-sm w-full text-center space-y-6 border border-blue-100"
+              className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl p-8 max-w-sm w-full text-center space-y-6 border border-blue-100 dark:border-slate-800"
             >
-              <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center text-5xl mx-auto shadow-inner">
+              <div className="w-24 h-24 bg-blue-50 dark:bg-blue-950/50 rounded-full flex items-center justify-center text-5xl mx-auto shadow-inner">
                 {showBadgePopup.icon}
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-black text-blue-600 uppercase tracking-widest">¡Insignia Desbloqueada!</p>
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight">{showBadgePopup.name}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{showBadgePopup.description}</p>
-                <div className="inline-block mt-4 px-4 py-2 bg-yellow-100 text-yellow-700 rounded-xl font-bold text-sm">
+                <p className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">¡Insignia Desbloqueada!</p>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{showBadgePopup.name}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{showBadgePopup.description}</p>
+                <div className="inline-block mt-4 px-4 py-2 bg-yellow-100 dark:bg-yellow-950 text-yellow-750 dark:text-yellow-400 rounded-xl font-bold text-sm">
                   +{showBadgePopup.points} puntos
                 </div>
               </div>
               <button 
                 onClick={() => setShowBadgePopup(null)}
-                className="w-full bg-blue-600 text-white font-black uppercase tracking-widest py-4 rounded-2xl shadow-lg shadow-blue-100"
+                className="w-full bg-blue-600 dark:bg-blue-700 text-white font-black uppercase tracking-widest py-4 rounded-2xl shadow-lg shadow-blue-100 dark:shadow-none cursor-pointer"
               >
                 ¡Excelente!
               </button>
@@ -484,13 +484,15 @@ function FormInput({ question, value, onChange, error }: any) {
 
   if (question.type === 'select') {
     return (
-      <div className="p-2 space-y-1">
+      <div className="p-2 space-y-1 bg-white dark:bg-slate-900">
         {question.options?.map((opt: string) => (
           <label 
             key={opt} 
             className={cn(
               "flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all border",
-              value === opt ? "bg-blue-50 border-blue-200 text-blue-900" : "border-transparent hover:bg-slate-50 text-slate-600"
+              value === opt 
+                ? "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200 font-semibold" 
+                : "border-transparent dark:border-transparent hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
             )}
           >
             <input 
@@ -498,10 +500,10 @@ function FormInput({ question, value, onChange, error }: any) {
               name={question.id} 
               checked={value === opt} 
               onChange={() => onChange(opt)}
-              className="w-5 h-5 text-blue-600 border-slate-300 focus:ring-blue-500"
+              className="w-5 h-5 text-blue-600 border-slate-300 dark:border-slate-600 focus:ring-blue-500 flex-shrink-0"
             />
-            <span className="text-sm font-semibold">{opt}</span>
-            {value === opt && <Check className="w-4 h-4 ml-auto text-blue-600" />}
+            <span className="text-sm font-semibold flex-1 break-words">{opt}</span>
+            {value === opt && <Check className="w-4 h-4 ml-auto text-blue-600 dark:text-blue-400 flex-shrink-0" />}
           </label>
         ))}
       </div>
@@ -510,7 +512,7 @@ function FormInput({ question, value, onChange, error }: any) {
 
   if (question.type === 'multi-select') {
     return (
-      <div className="p-2 space-y-1">
+      <div className="p-2 space-y-1 bg-white dark:bg-slate-900">
         {question.options?.map((opt: string) => {
           const isSelected = selectedOptions.includes(opt);
           return (
@@ -518,17 +520,19 @@ function FormInput({ question, value, onChange, error }: any) {
               key={opt} 
               className={cn(
                 "flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all border",
-                isSelected ? "bg-blue-50 border-blue-200 text-blue-900" : "border-transparent hover:bg-slate-50 text-slate-600"
+                isSelected 
+                  ? "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200 font-semibold" 
+                  : "border-transparent dark:border-transparent hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
               )}
             >
               <input 
                 type="checkbox" 
                 checked={isSelected} 
                 onChange={() => toggleOption(opt)}
-                className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500 flex-shrink-0"
               />
-              <span className="text-sm font-semibold">{opt}</span>
-              {isSelected && <Check className="w-4 h-4 ml-auto text-blue-600" />}
+              <span className="text-sm font-semibold flex-1 break-words">{opt}</span>
+              {isSelected && <Check className="w-4 h-4 ml-auto text-blue-600 dark:text-blue-400 flex-shrink-0" />}
             </label>
           );
         })}
@@ -538,8 +542,8 @@ function FormInput({ question, value, onChange, error }: any) {
 
   if (question.type === 'scale') {
     return (
-      <div className="p-8 space-y-6">
-        <div className="flex justify-between w-full text-[10px] text-slate-400 font-bold uppercase tracking-widest px-2">
+      <div className="p-8 space-y-6 bg-white dark:bg-slate-900">
+        <div className="flex justify-between w-full text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest px-2">
           <span>{question.labels?.[0] || 'Mínimo'}</span>
           <span>{question.labels?.[1] || 'Máximo'}</span>
         </div>
@@ -547,12 +551,13 @@ function FormInput({ question, value, onChange, error }: any) {
           {[1, 2, 3, 4, 5].map((num) => (
             <button
               key={num}
+              type="button"
               onClick={() => onChange(num.toString())}
               className={cn(
-                "flex-1 aspect-square rounded-2xl border-2 font-black text-xl transition-all",
+                "flex-1 aspect-square rounded-2xl border-2 font-black text-xl transition-all cursor-pointer",
                 value === num.toString() 
-                  ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200" 
-                  : "border-slate-100 text-slate-300 hover:border-slate-300 hover:text-slate-500"
+                  ? "bg-blue-600 dark:bg-blue-700 border-blue-600 dark:border-blue-700 text-white shadow-lg shadow-blue-200 dark:shadow-none" 
+                  : "border-slate-100 dark:border-slate-800 text-slate-300 dark:text-slate-650 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-500 dark:hover:text-slate-400"
               )}
             >
               {num}
@@ -564,15 +569,17 @@ function FormInput({ question, value, onChange, error }: any) {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-white dark:bg-slate-900">
       <input
         type={question.type === 'date' ? 'date' : question.type === 'number' ? 'number' : 'text'}
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         placeholder={question.placeholder || "Tu respuesta..."}
         className={cn(
-          "w-full px-5 py-4 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-blue-100 text-slate-900 font-medium",
-          error ? "border-red-300 bg-red-50" : "border-slate-100 bg-slate-50 focus:border-blue-500 focus:bg-white"
+          "w-full px-5 py-4 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-slate-900 dark:text-white font-medium",
+          error 
+            ? "border-red-300 dark:border-red-900 bg-red-50 dark:bg-red-950/25 text-red-500 dark:text-red-400" 
+            : "border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-slate-100"
         )}
       />
       {error && <p className="mt-2 text-xs font-bold text-red-500 uppercase tracking-wider">{error}</p>}

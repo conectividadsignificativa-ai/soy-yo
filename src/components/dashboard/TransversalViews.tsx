@@ -318,7 +318,7 @@ export default function TransversalViews({ data }: TransversalViewsProps) {
                 Usa y comparte estos enlaces específicos con cada socio para medir su impacto de captación:
               </p>
               
-              <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-[550px] overflow-y-auto pr-1">
                 {(() => {
                   const currentBase = window.location.origin + window.location.pathname;
                   const cleanBase = currentBase.endsWith('/') ? currentBase : currentBase + '/';
